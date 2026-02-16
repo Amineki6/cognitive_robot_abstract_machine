@@ -166,7 +166,7 @@ class Scale:
     def to_bounding_box(self) -> BoundingBox:
         min_point = Point3(-self.x / 2, -self.y / 2, -self.z / 2)
         max_point = Point3(self.x / 2, self.y / 2, self.z / 2)
-        return BoundingBox.from_min_max(min_point, max_point)
+        return BoundingBox.from_min_max(min_point, max_point, None)
 
 
 @dataclass
@@ -802,11 +802,14 @@ class BoundingBox:
         return self.simple_event.contains((x, y, z))
 
     @classmethod
-    def from_simple_event(cls, simple_event: SimpleEvent):
+    def from_simple_event(
+        cls, simple_event: SimpleEvent, origin: HomogeneousTransformationMatrix
+    ) -> List[Self]:
         """
         Create a list of bounding boxes from a simple random event.
 
         :param simple_event: The random event.
+        :param origin: The origin of the intersection.
         :return: The list of bounding boxes.
         """
         result = []
@@ -815,7 +818,9 @@ class BoundingBox:
             simple_event[SpatialVariables.y.value].simple_sets,
             simple_event[SpatialVariables.z.value].simple_sets,
         ):
-            result.append(cls(x.lower, y.lower, z.lower, x.upper, y.upper, z.upper))
+            result.append(
+                cls(x.lower, y.lower, z.lower, x.upper, y.upper, z.upper, origin)
+            )
         return result
 
     def intersection_with(self, other: BoundingBox) -> Optional[BoundingBox]:
@@ -825,10 +830,11 @@ class BoundingBox:
         :param other: The other bounding box.
         :return: The intersection of the two bounding boxes or None if they do not intersect.
         """
-        result = self.simple_event.intersection_with(other.simple_event)
+        other_in_same_frame = other.transform_to_origin(self.origin)
+        result = self.simple_event.intersection_with(other_in_same_frame.simple_event)
         if result.is_empty():
             return None
-        return self.__class__.from_simple_event(result)[0]
+        return self.__class__.from_simple_event(result, self.origin)[0]
 
     def enlarge(
         self,
@@ -898,7 +904,12 @@ class BoundingBox:
         ]
 
     @classmethod
-    def from_min_max(cls, min_point: Point3, max_point: Point3) -> Self:
+    def from_min_max(
+        cls,
+        min_point: Point3,
+        max_point: Point3,
+        origin: HomogeneousTransformationMatrix,
+    ) -> Self:
         """
         Set the axis-aligned bounding box from a minimum and maximum point.
 
@@ -908,13 +919,7 @@ class BoundingBox:
         assert (
             min_point.reference_frame == max_point.reference_frame
         ), "The reference frames of the minimum and maximum points must be the same."
-        return cls(
-            *min_point.to_np()[:3],
-            *max_point.to_np()[:3],
-            origin=HomogeneousTransformationMatrix(
-                reference_frame=min_point.reference_frame
-            ),
-        )
+        return cls(*min_point.to_np()[:3], *max_point.to_np()[:3], origin=origin)
 
     def as_shape(self) -> Box:
         scale = Scale(
@@ -940,12 +945,12 @@ class BoundingBox:
         origin_frame = origin_T_self.reference_frame
         world = origin_frame._world
 
-        reference_T_origin = world.compute_forward_kinematics(
-            reference_T_new_origin.reference_frame, origin_frame
-        )
+        # reference_T_origin = world.compute_forward_kinematics(
+        #     reference_T_new_origin.reference_frame, origin_frame
+        # )
 
         reference_T_self: HomogeneousTransformationMatrix = (
-            reference_T_origin @ origin_T_self
+            reference_T_new_origin @ origin_T_self
         )
 
         # Get all 8 corners of the BB in link-local space
@@ -974,6 +979,7 @@ class BoundingBox:
             Point3.from_iterable(
                 max_corner, reference_frame=reference_T_new_origin.reference_frame
             ),
+            reference_T_new_origin,
         )
 
         return world_bb
