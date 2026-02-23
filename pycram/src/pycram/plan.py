@@ -1113,6 +1113,9 @@ class ActionNode(BaseActionNode, Generic[ActionType]):
 
         self.log_execution_data_post_perform()
 
+        if self.plan.context.evaluate_conditions:
+            self.designator_ref.evaluate_post_condition()
+
         return result
 
     def __repr__(self, *args, **kwargs):

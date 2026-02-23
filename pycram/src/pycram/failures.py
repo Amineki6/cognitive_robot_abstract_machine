@@ -40,8 +40,11 @@ class ConditionNotSatisfied(PlanFailure):
         action: Type[ActionDescription],
         condition: ConditionType,
     ):
-        false_statements = get_false_statements(condition)
-        msg = f"{"Pre" if pre_condition else "Post"}-Condition for Action '{action.__name__}' is not satisfied, following statements are false: {[s._name_ for s in false_statements]}"
+        if isinstance(condition, bool):
+            msg = f"{"Pre" if pre_condition else "Post"}-Condition for Action is not satisfied"
+        else:
+            false_statements = get_false_statements(condition)
+            msg = f"{"Pre" if pre_condition else "Post"}-Condition for Action '{action.__name__}' is not satisfied, following statements are false: {[s._name_ for s in false_statements]}"
         super().__init__(msg)
 
 

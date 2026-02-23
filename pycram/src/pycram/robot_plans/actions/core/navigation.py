@@ -6,6 +6,9 @@ from datetime import timedelta
 import numpy as np
 from typing_extensions import Union, Optional, Type, Any, Iterable
 
+from krrood.entity_query_language.entity import and_
+from krrood.entity_query_language.symbolic import SymbolicExpression
+from semantic_digital_twin.reasoning.robot_predicates import is_pose_free_for_robot
 from semantic_digital_twin.robots.abstract_robot import Camera
 from ..base import ActionDescription
 from ...motions.robot_body import LookingMotion
@@ -40,14 +43,24 @@ class NavigateAction(ActionDescription):
             self.context, MoveMotion(self.target_location, self.keep_joint_states)
         ).perform()
 
-    def validate(
-        self, result: Optional[Any] = None, max_wait_time: Optional[timedelta] = None
-    ):
-        pose_validator = PoseErrorChecker(World.conf.get_pose_tolerance())
-        if not pose_validator.is_error_acceptable(
-            World.robot.pose, self.target_location
-        ):
-            raise NavigationGoalNotReachedError(World.robot.pose, self.target_location)
+    def pre_condition(self, bound=True) -> SymbolicExpression:
+        variables = self.bound_variables if bound else self.unbound_variables
+        return and_(
+            is_pose_free_for_robot(
+                self.robot_view, variables[self.target_location].to_spatial_type()
+            ),
+            self.robot_view.drive is not None,
+        )
+
+    def post_condition(self, bound=True) -> SymbolicExpression:
+        variables = self.bound_variables if bound else self.unbound_variables
+        return and_(
+            np.allclose(
+                self.robot_view.root.global_pose,
+                self.target_location.to_spatial_type(),
+                atol=0.03,
+            )
+        )
 
     @classmethod
     def description(

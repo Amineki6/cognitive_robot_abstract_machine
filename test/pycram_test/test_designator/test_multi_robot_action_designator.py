@@ -1,12 +1,13 @@
-import time
 from copy import deepcopy
 
 import numpy as np
 import pytest
-import rclpy
 from rustworkx.rustworkx import NoEdgeBetweenNodes
 from typing_extensions import Tuple, Generator
 
+# The alternative mapping needs to be imported for the stretch to work properly
+import pycram.alternative_motion_mappings.stretch_motion_mapping  # type: ignore
+import pycram.alternative_motion_mappings.tiago_motion_mapping  # type: ignore
 from giskardpy.utils.utils_for_tests import compare_axis_angle, compare_orientations
 from pycram.datastructures.dataclasses import Context
 from pycram.datastructures.enums import (
@@ -19,9 +20,7 @@ from pycram.datastructures.grasp import GraspDescription
 from pycram.datastructures.pose import PoseStamped
 from pycram.language import SequentialPlan
 from pycram.motion_executor import simulated_robot
-from pycram.view_manager import ViewManager
 from pycram.robot_plans import (
-    MoveTorsoAction,
     MoveTorsoActionDescription,
     NavigateActionDescription,
     SetGripperActionDescription,
@@ -37,11 +36,7 @@ from pycram.robot_plans import (
     GraspingActionDescription,
     TransportActionDescription,
 )
-from semantic_digital_twin.adapters.ros.pose_publisher import PosePublisher
-from semantic_digital_twin.adapters.ros.tf_publisher import TFPublisher
-from semantic_digital_twin.adapters.ros.visualization.viz_marker import (
-    VizMarkerPublisher,
-)
+from pycram.view_manager import ViewManager
 from semantic_digital_twin.datastructures.definitions import (
     TorsoState,
     GripperState,
@@ -55,10 +50,6 @@ from semantic_digital_twin.robots.tiago import Tiago
 from semantic_digital_twin.semantic_annotations.semantic_annotations import Milk
 from semantic_digital_twin.spatial_types import HomogeneousTransformationMatrix
 from semantic_digital_twin.world import World
-
-# The alternative mapping needs to be imported for the stretch to work properly
-import pycram.alternative_motion_mappings.stretch_motion_mapping  # type: ignore
-import pycram.alternative_motion_mappings.tiago_motion_mapping  # type: ignore
 
 
 @pytest.fixture(scope="session", params=["hsrb", "stretch", "tiago", "pr2"])

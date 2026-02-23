@@ -5,9 +5,10 @@ from datetime import timedelta
 
 from sympy import true
 
-from krrood.entity_query_language.entity import entity, variable
+from krrood.entity_query_language.entity import entity, variable, and_
 from krrood.entity_query_language.entity_result_processors import an
-from krrood.entity_query_language.symbolic import Variable
+from krrood.entity_query_language.symbolic import Variable, SymbolicExpression
+from semantic_digital_twin.reasoning.robot_predicates import is_body_in_gripper
 from semantic_digital_twin.robots.abstract_robot import AbstractRobot
 from semantic_digital_twin.datastructures.definitions import GripperState
 from semantic_digital_twin.world_description.world_entity import Body, Connection
@@ -25,8 +26,11 @@ from ....datastructures.enums import (
 )
 from ....datastructures.grasp import GraspDescription
 from ....datastructures.partial_designator import PartialDesignator
+from ....datastructures.pose import PoseStamped
 from ....failures import ContainerManipulationError
 from ....language import SequentialPlan
+from ....pose_validator import reachability_validator
+from ....querying.predicates import GripperIsFree
 from ....view_manager import ViewManager
 from ....robot_plans.actions.base import ActionDescription
 
@@ -70,6 +74,26 @@ class OpenAction(ActionDescription):
                 GripperState.OPEN, self.arm, allow_gripper_collision=True
             ),
         ).perform()
+
+    def pre_condition(self, bound=True) -> SymbolicExpression:
+        variables = self.bound_variables if bound else self.unbound_variables
+        manipulator = ViewManager.get_end_effector_view(variables[self.arm])
+
+        return and_(
+            GripperIsFree(manipulator),
+            reachability_validator(
+                PoseStamped.from_spatial_type(self.object_designator.global_pose),
+                manipulator.tool_frame,
+                self.robot_view,
+                self.world,
+                self.robot_view.full_body_controlled,
+            ),
+        )
+
+    def post_condition(self, bound=True) -> SymbolicExpression:
+        variables = self.bound_variables if bound else self.unbound_variables
+        manipulator = ViewManager.get_end_effector_view(variables[self.arm])
+        return is_body_in_gripper(self.object_designator, manipulator)
 
     @classmethod
     def description(

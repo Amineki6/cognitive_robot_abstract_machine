@@ -34,6 +34,7 @@ from ..world_description.connections import (
     ActiveConnection,
     OmniDrive,
     ActiveConnection1DOF,
+    DiffDrive,
 )
 from ..world_description.geometry import BoundingBox
 from ..world_description.shape_collection import BoundingBoxCollection
@@ -519,7 +520,7 @@ class AbstractRobot(Agent):
         """
         try:
             parent_connection = self.root.parent_connection
-            if isinstance(parent_connection, OmniDrive):
+            if isinstance(parent_connection, (OmniDrive, DiffDrive)):
                 return parent_connection
         except AttributeError:
             pass

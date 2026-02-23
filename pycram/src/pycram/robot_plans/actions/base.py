@@ -73,9 +73,6 @@ class ActionDescription(DesignatorDescription, ABC):
             # for post_cb in self._post_perform_callbacks:
             #     post_cb(self)
 
-        if self.plan.context.evaluate_conditions:
-            self.evaluate_post_condition()
-
         return result
 
     @abstractmethod

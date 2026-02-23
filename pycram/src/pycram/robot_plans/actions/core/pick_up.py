@@ -4,37 +4,34 @@ import logging
 from dataclasses import dataclass
 from datetime import timedelta
 
-from typing_extensions import Union, Optional, Type, Any, Iterable
+from typing_extensions import Union, Optional, Any, Iterable
 
 from krrood.entity_query_language.entity import and_, not_, or_
-from krrood.entity_query_language.predicate import Symbol, symbolic_function
 from krrood.entity_query_language.symbolic import SymbolicExpression
 from semantic_digital_twin.datastructures.definitions import GripperState
-from semantic_digital_twin.reasoning.predicates import reachable
 from semantic_digital_twin.reasoning.robot_predicates import is_body_in_gripper
-from semantic_digital_twin.spatial_types import HomogeneousTransformationMatrix
-from semantic_digital_twin.world_description.connections import FixedConnection
 from semantic_digital_twin.world_description.world_entity import Body
 from ...motions.gripper import MoveGripperMotion, MoveTCPMotion
 from ....config.action_conf import ActionConfig
 from ....datastructures.enums import (
     Arms,
     MovementType,
-    FindBodyInRegionMethod,
 )
 from ....datastructures.grasp import GraspDescription
 from ....datastructures.partial_designator import PartialDesignator
 from ....datastructures.pose import PoseStamped
 from ....failures import ObjectNotGraspedError
-from ....failures import ObjectNotInGraspingArea
 from ....language import SequentialPlan
 from ....pose_validator import reachability_validator
-from ....querying.predicates import GripperIsFree, GripperIsNotFree
-from ....view_manager import ViewManager
+from ....querying.predicates import GripperIsFree
 from ....robot_plans.actions.base import ActionDescription
-from ....utils import translate_pose_along_local_axis
+from ....view_manager import ViewManager
 
 logger = logging.getLogger(__name__)
+
+
+def _and():
+    pass
 
 
 @dataclass
@@ -82,29 +79,26 @@ class ReachAction(ActionDescription):
             ),
         ).perform()
 
-    def validate(
-        self, result: Optional[Any] = None, max_wait_time: Optional[timedelta] = None
-    ):
-        """
-        Check if object is contained in the gripper such that it can be grasped and picked up.
-        """
-        fingers_link_names = self.arm_chain.end_effector.fingers_link_names
-        if fingers_link_names:
-            if not is_body_between_fingers(
-                self.object_designator,
-                fingers_link_names,
-                method=FindBodyInRegionMethod.MultiRay,
-            ):
-                raise ObjectNotInGraspingArea(
-                    self.object_designator,
-                    World.robot,
-                    self.arm,
-                    self.grasp_description,
-                )
-        else:
-            logger.warning(
-                f"Cannot validate reaching to pick up action for arm {self.arm} as no finger links are defined."
-            )
+    def pre_condition(self, bound=True) -> SymbolicExpression:
+        variables = self.bound_variables if bound else self.unbound_variables
+        manipulator = ViewManager.get_end_effector_view(
+            variables[self.arm], self.robot_view
+        )
+        return and_(
+            GripperIsFree(manipulator),
+            reachability_validator(
+                PoseStamped.from_spatial_type(self.object_designator.global_pose),
+                manipulator.tool_frame,
+                self.robot_view,
+                self.world,
+                self.robot_view.full_body_controlled,
+            ),
+        )
+
+    def post_condition(self, bound=True) -> SymbolicExpression:
+        variables = self.bound_variables if bound else self.unbound_variables
+        manipulator = ViewManager.get_end_effector_view(variables[self.arm])
+        return and_(is_body_in_gripper(self.object_designator, manipulator) > 0.9)
 
     @classmethod
     def description(
