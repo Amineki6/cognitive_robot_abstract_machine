@@ -10,7 +10,7 @@ from krrood.entity_query_language.entity import and_
 from krrood.entity_query_language.symbolic import SymbolicExpression
 from semantic_digital_twin.reasoning.robot_predicates import is_pose_free_for_robot
 from semantic_digital_twin.robots.abstract_robot import Camera
-from ..base import ActionDescription
+from ..base import ActionDescription, DescriptionType
 from ...motions.robot_body import LookingMotion
 from ...motions.navigation import MoveMotion
 from ....config.action_conf import ActionConfig
@@ -65,9 +65,9 @@ class NavigateAction(ActionDescription):
     @classmethod
     def description(
         cls,
-        target_location: Union[Iterable[PoseStamped], PoseStamped],
-        keep_joint_states: Union[
-            Iterable[bool], bool
+        target_location: DescriptionType[PoseStamped],
+        keep_joint_states: DescriptionType[
+            bool
         ] = ActionConfig.navigate_keep_joint_states,
     ) -> PartialDesignator[NavigateAction]:
         return PartialDesignator[NavigateAction](
@@ -111,8 +111,8 @@ class LookAtAction(ActionDescription):
     @classmethod
     def description(
         cls,
-        target: Union[Iterable[PoseStamped], PoseStamped],
-        camera: Optional[Union[Iterable[Camera], Camera]] = None,
+        target: DescriptionType[PoseStamped],
+        camera: DescriptionType[Camera] = None,
     ) -> PartialDesignator[LookAtAction]:
         return PartialDesignator[LookAtAction](
             LookAtAction, target=target, camera=camera

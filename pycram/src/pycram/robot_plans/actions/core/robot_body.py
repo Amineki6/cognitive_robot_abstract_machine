@@ -18,7 +18,7 @@ from ....datastructures.pose import Vector3Stamped
 from ....failures import TorsoGoalNotReached, ConfigurationNotReached
 from ....language import SequentialPlan
 from ....view_manager import ViewManager
-from ....robot_plans.actions.base import ActionDescription
+from ....robot_plans.actions.base import ActionDescription, DescriptionType
 from ....robot_plans.motions.gripper import MoveGripperMotion
 from ....robot_plans.motions.robot_body import MoveJointsMotion
 from ....validation.goal_validator import create_multiple_joint_goal_validator
@@ -71,7 +71,7 @@ class MoveTorsoAction(ActionDescription):
 
     @classmethod
     def description(
-        cls, torso_state: Union[Iterable[TorsoState], TorsoState]
+        cls, torso_state: DescriptionType[TorsoState]
     ) -> PartialDesignator[MoveTorsoAction]:
         return PartialDesignator[MoveTorsoAction](
             MoveTorsoAction, torso_state=torso_state
@@ -103,8 +103,8 @@ class SetGripperAction(ActionDescription):
     @classmethod
     def description(
         cls,
-        gripper: Union[Iterable[Arms], Arms],
-        motion: Union[Iterable[GripperState], GripperState] = None,
+        gripper: DescriptionType[Arms],
+        motion: DescriptionType[GripperState] = None,
     ) -> PartialDesignator[SetGripperAction]:
         return PartialDesignator[SetGripperAction](
             SetGripperAction, gripper=gripper, motion=motion
@@ -164,7 +164,7 @@ class ParkArmsAction(ActionDescription):
 
     @classmethod
     def description(
-        cls, arm: Union[Iterable[Arms], Arms]
+        cls, arm: DescriptionType[Arms]
     ) -> PartialDesignator[ParkArmsAction]:
         return PartialDesignator[ParkArmsAction](cls, arm=arm)
 
@@ -275,12 +275,12 @@ class CarryAction(ActionDescription):
     @classmethod
     def description(
         cls,
-        arm: Union[Iterable[Arms], Arms],
-        align: Optional[bool] = False,
-        tip_link: Optional[str] = None,
-        tip_axis: Optional[AxisIdentifier] = None,
-        root_link: Optional[str] = None,
-        root_axis: Optional[AxisIdentifier] = None,
+        arm: DescriptionType[Arms],
+        align: DescriptionType[bool] = False,
+        tip_link: DescriptionType[str] = None,
+        tip_axis: DescriptionType[AxisIdentifier] = None,
+        root_link: DescriptionType[str] = None,
+        root_axis: DescriptionType[AxisIdentifier] = None,
     ) -> PartialDesignator[CarryAction]:
         return PartialDesignator[CarryAction](
             cls,

@@ -15,7 +15,7 @@ from typing_extensions import Union, Optional, Type, Any, Iterable
 from ....perception import PerceptionQuery
 from ....datastructures.enums import DetectionTechnique, DetectionState
 from ....datastructures.partial_designator import PartialDesignator
-from ....robot_plans.actions.base import ActionDescription
+from ....robot_plans.actions.base import ActionDescription, DescriptionType
 
 
 @dataclass
@@ -83,10 +83,10 @@ class DetectAction(ActionDescription):
     @classmethod
     def description(
         cls,
-        technique: Union[Iterable[DetectionTechnique], DetectionTechnique],
-        state: Union[Iterable[DetectionState], DetectionState] = None,
-        object_sem_annotation: Union[
-            Iterable[Type[SemanticAnnotation]], Type[SemanticAnnotation]
+        technique: DescriptionType[ DetectionTechnique],
+        state: DescriptionType[DetectionState] = None,
+        object_sem_annotation: DescriptionType[
+            Type[SemanticAnnotation]
         ] = None,
         region: Union[Iterable[Region], Region] = None,
     ) -> PartialDesignator[DetectAction]:

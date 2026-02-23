@@ -28,7 +28,7 @@ from ....failures import ObjectNotPlacedAtTargetLocation, ObjectStillInContact
 from ....language import SequentialPlan
 from ....querying.predicates import GripperIsFree
 from ....view_manager import ViewManager
-from ....robot_plans.actions.base import ActionDescription
+from ....robot_plans.actions.base import ActionDescription, DescriptionType
 from ....utils import translate_pose_along_local_axis
 from ....validation.error_checkers import PoseErrorChecker
 from ....visualization import plot_rustworkx_interactive
@@ -131,9 +131,9 @@ class PlaceAction(ActionDescription):
     @classmethod
     def description(
         cls,
-        object_designator: Union[Iterable[Body], Body],
-        target_location: Union[Iterable[PoseStamped], PoseStamped],
-        arm: Union[Iterable[Arms], Arms],
+        object_designator: DescriptionType[Body],
+        target_location: DescriptionType[PoseStamped],
+        arm: DescriptionType[Arms],
     ) -> PartialDesignator[PlaceAction]:
         return PartialDesignator[PlaceAction](
             PlaceAction,

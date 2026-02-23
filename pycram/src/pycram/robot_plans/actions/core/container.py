@@ -32,7 +32,7 @@ from ....language import SequentialPlan
 from ....pose_validator import reachability_validator
 from ....querying.predicates import GripperIsFree
 from ....view_manager import ViewManager
-from ....robot_plans.actions.base import ActionDescription
+from ....robot_plans.actions.base import ActionDescription, DescriptionType
 
 
 @dataclass
@@ -98,10 +98,10 @@ class OpenAction(ActionDescription):
     @classmethod
     def description(
         cls,
-        object_designator_description: Union[Iterable[Body], Body],
-        arm: Union[Iterable[Arms], Arms] = None,
-        grasping_prepose_distance: Union[
-            Iterable[float], float
+        object_designator_description: DescriptionType[Body],
+        arm: DescriptionType[Arms] = None,
+        grasping_prepose_distance: DescriptionType[
+            float
         ] = ActionConfig.grasping_prepose_distance,
     ) -> PartialDesignator[OpenAction]:
         return PartialDesignator[OpenAction](
@@ -164,10 +164,10 @@ class CloseAction(ActionDescription):
     @classmethod
     def description(
         cls,
-        object_designator_description: Union[Iterable[Body], Body],
-        arm: Union[Iterable[Arms], Arms] = None,
-        grasping_prepose_distance: Union[
-            Iterable[float], float
+        object_designator_description: DescriptionType[Body],
+        arm: DescriptionType[Arms] = None,
+        grasping_prepose_distance: DescriptionType[
+            float
         ] = ActionConfig.grasping_prepose_distance,
     ) -> PartialDesignator[CloseAction]:
         return PartialDesignator[CloseAction](

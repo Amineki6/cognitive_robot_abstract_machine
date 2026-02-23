@@ -32,7 +32,7 @@ from ....designators.location_designator import (
 from ....designators.object_designator import BelieveObject
 from ....failures import ObjectUnfetchable, ConfigurationNotReached
 from ....language import SequentialPlan
-from ....robot_plans.actions.base import ActionDescription
+from ....robot_plans.actions.base import ActionDescription, DescriptionType
 
 
 @dataclass
@@ -152,9 +152,9 @@ class TransportAction(ActionDescription):
     @classmethod
     def description(
         cls,
-        object_designator: Union[Iterable[Body], Body],
-        target_location: Union[Iterable[PoseStamped], PoseStamped],
-        arm: Union[Iterable[Arms], Arms] = None,
+        object_designator: DescriptionType[Body],
+        target_location: DescriptionType[PoseStamped],
+        arm: DescriptionType[Arms] = None,
         place_rotation_agnostic: Optional[bool] = False,
     ) -> PartialDesignator[TransportAction]:
         return PartialDesignator(
@@ -220,9 +220,9 @@ class PickAndPlaceAction(ActionDescription):
     @classmethod
     def description(
         cls,
-        object_designator: Union[Iterable[Body], Body],
-        target_location: Union[Iterable[PoseStamped], PoseStamped],
-        arm: Union[Iterable[Arms], Arms] = None,
+        object_designator: DescriptionType[Body],
+        target_location: DescriptionType[PoseStamped],
+        arm: DescriptionType[Arms] = None,
         grasp_description=GraspDescription,
     ) -> PartialDesignator[PickAndPlaceAction]:
         return PartialDesignator(
@@ -284,12 +284,12 @@ class MoveAndPlaceAction(ActionDescription):
     @classmethod
     def description(
         cls,
-        standing_position: Union[Iterable[PoseStamped], PoseStamped],
-        object_designator: Union[Iterable[Body], Body],
-        target_location: Union[Iterable[PoseStamped], PoseStamped],
-        arm: Union[Iterable[Arms], Arms] = None,
-        keep_joint_states: Union[
-            Iterable[bool], bool
+        standing_position: DescriptionType[PoseStamped],
+        object_designator: DescriptionType[Body],
+        target_location: DescriptionType[PoseStamped],
+        arm: DescriptionType[Arms] = None,
+        keep_joint_states: DescriptionType[
+            bool
         ] = ActionConfig.navigate_keep_joint_states,
     ) -> PartialDesignator[MoveAndPlaceAction]:
         return PartialDesignator(
@@ -298,6 +298,7 @@ class MoveAndPlaceAction(ActionDescription):
             object_designator=object_designator,
             target_location=target_location,
             arm=arm,
+            keep_joint_states=keep_joint_states,
         )
 
 
@@ -357,12 +358,12 @@ class MoveAndPickUpAction(ActionDescription):
     @classmethod
     def description(
         cls,
-        standing_position: Union[Iterable[PoseStamped], PoseStamped],
-        object_designator: Union[Iterable[PoseStamped], PoseStamped],
-        arm: Union[Iterable[Arms], Arms] = None,
-        grasp_description: Union[Iterable[Grasp], Grasp] = None,
-        keep_joint_states: Union[
-            Iterable[bool], bool
+        standing_position: DescriptionType[PoseStamped],
+        object_designator: DescriptionType[PoseStamped],
+        arm: DescriptionType[Arms] = None,
+        grasp_description: DescriptionType[Grasp] = None,
+        keep_joint_states: DescriptionType[
+            bool
         ] = ActionConfig.navigate_keep_joint_states,
     ) -> PartialDesignator[MoveAndPickUpAction]:
         return PartialDesignator(
@@ -462,8 +463,8 @@ class EfficientTransportAction(ActionDescription):
     @classmethod
     def description(
         cls,
-        object_designator: Union[Iterable[Body], Body],
-        target_location: Union[Iterable[PoseStamped], PoseStamped],
+        object_designator: DescriptionType[Body],
+        target_location: DescriptionType[PoseStamped],
     ) -> PartialDesignator[EfficientTransportAction]:
         return PartialDesignator(
             cls, object_designator=object_designator, target_location=target_location

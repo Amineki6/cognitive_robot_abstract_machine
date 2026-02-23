@@ -24,7 +24,7 @@ from ....failures import ObjectNotGraspedError
 from ....language import SequentialPlan
 from ....pose_validator import reachability_validator
 from ....querying.predicates import GripperIsFree
-from ....robot_plans.actions.base import ActionDescription
+from ....robot_plans.actions.base import ActionDescription, DescriptionType
 from ....view_manager import ViewManager
 
 logger = logging.getLogger(__name__)
@@ -97,17 +97,19 @@ class ReachAction(ActionDescription):
 
     def post_condition(self, bound=True) -> SymbolicExpression:
         variables = self.bound_variables if bound else self.unbound_variables
-        manipulator = ViewManager.get_end_effector_view(variables[self.arm])
+        manipulator = ViewManager.get_end_effector_view(
+            variables[self.arm], self.robot_view
+        )
         return and_(is_body_in_gripper(self.object_designator, manipulator) > 0.9)
 
     @classmethod
     def description(
         cls,
-        target_pose: Union[Iterable[PoseStamped], PoseStamped],
-        arm: Union[Iterable[Arms], Arms] = None,
-        grasp_description: Union[Iterable[GraspDescription], GraspDescription] = None,
-        object_designator: Union[Iterable[Body], Body] = None,
-        reverse_reach_order: Union[Iterable[bool], bool] = False,
+        target_pose: DescriptionType[PoseStamped],
+        arm: DescriptionType[Arms] = None,
+        grasp_description: DescriptionType[GraspDescription] = None,
+        object_designator: DescriptionType[Body] = None,
+        reverse_reach_order: DescriptionType[bool] = False,
     ) -> PartialDesignator[ReachAction]:
         return PartialDesignator[ReachAction](
             ReachAction,
@@ -209,9 +211,9 @@ class PickUpAction(ActionDescription):
     @classmethod
     def description(
         cls,
-        object_designator: Union[Iterable[Body], Body],
-        arm: Union[Iterable[Arms], Arms] = None,
-        grasp_description: Union[Iterable[GraspDescription], GraspDescription] = None,
+        object_designator: DescriptionType[Body],
+        arm: DescriptionType[Arms] = None,
+        grasp_description: DescriptionType[GraspDescription] = None,
     ) -> PartialDesignator[PickUpAction]:
         return PartialDesignator[PickUpAction](
             PickUpAction,
@@ -270,11 +272,9 @@ class GraspingAction(ActionDescription):
     @classmethod
     def description(
         cls,
-        object_designator: Union[Iterable[Body], Body],
-        arm: Union[Iterable[Arms], Arms] = None,
-        grasp_description: Union[
-            Iterable[GraspDescription], GraspDescription
-        ] = ActionConfig.grasping_prepose_distance,
+        object_designator: DescriptionType[Body],
+        arm: DescriptionType[Arms] = None,
+        grasp_description: DescriptionType[GraspDescription] = None,
     ) -> PartialDesignator[GraspingAction]:
         return PartialDesignator[GraspingAction](
             GraspingAction,

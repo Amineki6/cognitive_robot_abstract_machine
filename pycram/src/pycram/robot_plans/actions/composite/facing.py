@@ -11,7 +11,7 @@ from ....config.action_conf import ActionConfig
 from ....datastructures.partial_designator import PartialDesignator
 from ....datastructures.pose import PoseStamped
 from ....language import SequentialPlan
-from ....robot_plans.actions.base import ActionDescription
+from ....robot_plans.actions.base import ActionDescription, DescriptionType
 from ....tf_transformations import quaternion_from_euler
 
 
@@ -66,7 +66,7 @@ class FaceAtAction(ActionDescription):
     @classmethod
     def description(
         cls,
-        pose: Union[Iterable[PoseStamped], PoseStamped],
+        pose: DescriptionType[ PoseStamped],
         keep_joint_states: Union[
             Iterable[bool], bool
         ] = ActionConfig.face_at_keep_joint_states,
