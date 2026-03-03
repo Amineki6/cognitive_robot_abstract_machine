@@ -23,6 +23,7 @@ from krrood.entity_query_language.query.quantifiers import (
     The,
     ResultQuantifier,
 )
+from krrood.entity_query_language.rules.conclusion import Add
 from krrood.entity_query_language.rules.conclusion_selector import Refinement, Alternative, Next
 from krrood.entity_query_language.query.query import Entity, SetOf, Query
 from krrood.entity_query_language.utils import is_iterable
