@@ -104,17 +104,17 @@ from dataclasses import dataclass
 from typing import List
 
 @dataclass
-class Body:
+class PhysicalBody:
     name: str
 
 @dataclass
-class World:
-    bodies: List[Body]
+class PhysicalWorld:
+    bodies: List[PhysicalBody]
 ```
 
 ### 2. Prepare some data
 ```python
-world = World(bodies=[Body("Robot"), Body("Human")])
+world = PhysicalWorld(bodies=[PhysicalBody("Robot"), PhysicalBody("Human")])
 ```
 
 ### 3. Build and run the query
@@ -124,7 +124,7 @@ We want to find a body named "Robot".
 from krrood.entity_query_language.factories import entity, variable, an
 
 # 1. Define a symbolic variable representing any Body from world.bodies
-body = variable(Body, domain=world.bodies)
+body = variable(PhysicalBody, domain=world.bodies)
 
 # 2. Create a query: we want "an" entity "body" WHERE "body.name" is "Robot"
 query = an(entity(body).where(body.name == "Robot"))
