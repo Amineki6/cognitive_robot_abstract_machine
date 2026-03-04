@@ -474,22 +474,3 @@ def translate_pose_along_local_axis(
         pose.to_quaternion(),
         reference_frame=pose.reference_frame,
     )
-
-
-def rotate_pose_by_quaternion(pose: Pose, quaternion: Quaternion) -> Pose:
-    """
-    Rotates a given pose by a specified quaternion. The function takes the pose and converts it into a
-    homogeneous transformation matrix. It applies the rotation specified by the quaternion and
-    returns the resulting transformation matrix.
-
-    :param pose: The original pose to be rotated.
-    :param quaternion: The quaternion specifying the rotation.
-
-    :return: The rotated pose.
-    """
-    return (
-        pose.to_homogeneous_matrix()
-        @ HomogeneousTransformationMatrix.from_point_rotation_matrix(
-            rotation_matrix=quaternion.to_rotation_matrix()
-        ).to_pose()
-    )
