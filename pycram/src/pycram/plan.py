@@ -6,7 +6,6 @@ from dataclasses import field, dataclass
 from datetime import datetime
 from enum import IntEnum
 from itertools import chain
-from typing import ClassVar
 
 import numpy as np
 import rustworkx as rx
@@ -22,32 +21,33 @@ from typing_extensions import (
     Type,
     Tuple,
     Iterator,
-    Union,
     Generic,
     TypeVar,
 )
 
 from giskardpy.motion_statechart.graph_node import Task
-from krrood.class_diagrams.failures import ClassIsUnMappedInClassDiagram
+from krrood.entity_query_language.query.match import Match
 from krrood.ormatic.utils import leaf_types
+from krrood.probabilistic_knowledge.parameterizer import (
+    Parameterization,
+)
+from krrood.probabilistic_knowledge.probable_variable import MatchToInstanceTranslator
+from pycram.datastructures.dataclasses import ExecutionData, Context
+from pycram.datastructures.enums import TaskStatus
+from pycram.datastructures.pose import PoseStamped
+from pycram.failures import PlanFailure
+from pycram.motion_executor import MotionExecutor
 from semantic_digital_twin.world_description.world_entity import Body
 from semantic_digital_twin.world_description.world_modification import (
     WorldModelModificationBlock,
 )
-from krrood.class_diagrams.class_diagram import ClassDiagram
-from krrood.probabilistic_knowledge.parameterizer import Parameterizer
-from .datastructures.dataclasses import ExecutionData, Context
-from .datastructures.enums import TaskStatus
-from .datastructures.pose import PoseStamped
-from .failures import PlanFailure
-from .motion_executor import MotionExecutor
 
 if TYPE_CHECKING:
-    from .robot_plans import ActionDescription
-    from .designator import DesignatorDescription, DesignatorType
-    from .datastructures.partial_designator import PartialDesignator
-    from .robot_plans.actions.base import ActionType
-    from .robot_plans.motions.base import MotionType
+    from pycram.robot_plans import ActionDescription
+    from pycram.designator import DesignatorDescription, DesignatorType
+    from pycram.datastructures.partial_designator import PartialDesignator
+    from pycram.robot_plans.actions.base import ActionType
+    from pycram.robot_plans.motions.base import MotionType
 else:
     ActionType = TypeVar("ActionType")
     MotionType = TypeVar("MotionType")
@@ -81,18 +81,18 @@ class Plan:
     The node, of the current_plan, that is currently being performed
     """
 
-    on_start_callback: ClassVar[
-        Dict[Optional[Union[Type[ActionDescription], Type[PlanNode]]], List[Callable]]
-    ] = {}
-    """
-    Callbacks to be called when a node of the given type is started.
-    """
-    on_end_callback: ClassVar[
-        Dict[Optional[Union[Type[ActionDescription], Type[PlanNode]]], List[Callable]]
-    ] = {}
-    """
-    Callbacks to be called when a node of the given type is ended.
-    """
+    # on_start_callback: ClassVar[
+    #     Dict[Optional[Union[Type[ActionDescription], Type[PlanNode]]], List[Callable]]
+    # ] = {}
+    # """
+    # Callbacks to be called when a node of the given type is started.
+    # """
+    # on_end_callback: ClassVar[
+    #     Dict[Optional[Union[Type[ActionDescription], Type[PlanNode]]], List[Callable]]
+    # ] = {}
+    # """
+    # Callbacks to be called when a node of the given type is ended.
+    # """
 
     def __init__(self, root: PlanNode, context: Context):
         super().__init__()
@@ -617,47 +617,30 @@ class Plan:
         if cls.on_end_callback and action_type in cls.on_end_callback:
             cls.on_end_callback[action_type].remove(callback)
 
-    def parameterize_plan(self, classes: Optional[List[type]] = None) -> List[Any]:
+    def generate_parameterizations(
+        self,
+    ) -> List[Tuple[ActionDescription, Optional[Parameterization]]]:
         """
         Parameterize all parameters of a plan using the krrood parameterizer.
 
-        :param classes: List of classes to include in the ClassDiagram
-                        (including classes found on the plan nodes).
-        :return: List of random event variables created by the parameterizer.
+        :return: Dictionary mapping all Designator nodes to their parameterizations.
         """
 
         ordered_nodes = [self.root] + self.root.recursive_children
-        designator_nodes = []
-        all_classes = set(classes)
 
-        for node in ordered_nodes:
-            if not (isinstance(node, DesignatorNode) and node.designator_type):
-                continue
+        designator_nodes = [
+            node
+            for node in ordered_nodes
+            if isinstance(node, DesignatorNode) and node.designator_type is not None
+        ]
 
-            designator_nodes.append(node)
-            all_classes.add(node.designator_type)
-
-        class_diagram = ClassDiagram(list(all_classes))
-        parameterizer = Parameterizer()
-
-        all_variables = []
-
-        for index, node in enumerate(designator_nodes):
-            try:
-                wrapped_class = class_diagram.get_wrapped_class(node.designator_type)
-            except ClassIsUnMappedInClassDiagram as e:
-                logger.error(
-                    f"Unmapped designator class for node {getattr(node, 'name', repr(node))} "
-                    f"(designator_index={index}, node_index={node.index}, {node.__class__.__name__}): {e}"
-                )
-                raise
-
-            prefix = f"{node.designator_type.__name__}_{index}"
-            variables = parameterizer.parameterize(wrapped_class, prefix=prefix)
-
-            all_variables.extend(variables)
-
-        return all_variables
+        result = []
+        for node in designator_nodes:
+            if isinstance(node, Match):
+                obj = MatchToInstanceTranslator(node)
+            else:
+                result.append((node, None))
+        return result
 
 
 def managed_node(func: Callable) -> Callable:
@@ -690,18 +673,18 @@ def managed_node(func: Callable) -> Callable:
 
         node.status = TaskStatus.RUNNING
         node.start_time = datetime.now()
-        on_start_callbacks = (
-            Plan.on_start_callback.get(node.designator_type, [])
-            + Plan.on_start_callback.get(None, [])
-            + Plan.on_start_callback.get(node.__class__, [])
-        )
-        on_end_callbacks = (
-            Plan.on_end_callback.get(node.designator_type, [])
-            + Plan.on_end_callback.get(None, [])
-            + Plan.on_end_callback.get(node.__class__, [])
-        )
-        for call_back in on_start_callbacks:
-            call_back(node)
+        # on_start_callbacks = (
+        #     Plan.on_start_callback.get(node.designator_type, [])
+        #     + Plan.on_start_callback.get(None, [])
+        #     + Plan.on_start_callback.get(node.__class__, [])
+        # )
+        # on_end_callbacks = (
+        #     Plan.on_end_callback.get(node.designator_type, [])
+        #     + Plan.on_end_callback.get(None, [])
+        #     + Plan.on_end_callback.get(node.__class__, [])
+        # )
+        # for call_back in on_start_callbacks:
+        #     call_back(node)
         result = None
         try:
             node.plan.current_node = node
@@ -715,8 +698,8 @@ def managed_node(func: Callable) -> Callable:
         finally:
             node.end_time = datetime.now()
             node.plan.current_node = node.parent
-            for call_back in on_end_callbacks:
-                call_back(node)
+            # for call_back in on_end_callbacks:
+            #     call_back(node)
         return result
 
     return wrapper

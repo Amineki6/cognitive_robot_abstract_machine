@@ -7,25 +7,29 @@ from dataclasses import dataclass
 import numpy as np
 from typing_extensions import Any, Dict
 
-from krrood.entity_query_language.entity import and_, not_, or_
-from krrood.entity_query_language.symbolic import SymbolicExpression
+from krrood.entity_query_language.core.base_expressions import SymbolicExpression
+from krrood.entity_query_language.factories import and_, or_, not_
+from pycram.datastructures.dataclasses import Context
+from pycram.pose_validator import reachability_validator
+from pycram.querying.predicates import GripperIsFree
 from semantic_digital_twin.datastructures.definitions import GripperState
 from semantic_digital_twin.reasoning.robot_predicates import is_body_in_gripper
 from semantic_digital_twin.world_description.world_entity import Body
-from ...motions.gripper import MoveGripperMotion, MoveTCPMotion
-from ....datastructures.dataclasses import Context
-from ....datastructures.enums import (
+from pycram.robot_plans.motions.gripper import MoveGripperMotion, MoveTCPMotion
+from pycram.config.action_conf import ActionConfig
+from pycram.datastructures.enums import (
     Arms,
     MovementType,
 )
-from ....datastructures.grasp import GraspDescription
-from ....datastructures.partial_designator import PartialDesignator
-from ....datastructures.pose import PoseStamped
-from ....language import SequentialPlan
-from ....pose_validator import reachability_validator
-from ....querying.predicates import GripperIsFree
-from ....robot_plans.actions.base import ActionDescription, DescriptionType
-from ....view_manager import ViewManager
+from pycram.datastructures.grasp import GraspDescription
+from pycram.datastructures.partial_designator import PartialDesignator
+from pycram.datastructures.pose import PoseStamped
+from pycram.failures import ObjectNotGraspedError
+from pycram.failures import ObjectNotInGraspingArea
+from pycram.language import SequentialPlan
+from pycram.view_manager import ViewManager
+from pycram.robot_plans.actions.base import ActionDescription, DescriptionType
+from pycram.utils import translate_pose_along_local_axis
 
 logger = logging.getLogger(__name__)
 

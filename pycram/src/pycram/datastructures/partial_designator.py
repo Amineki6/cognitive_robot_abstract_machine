@@ -5,10 +5,8 @@ from inspect import signature
 
 from typing_extensions import List, Tuple, Any, Dict, TypeVar, Iterator, Iterable, Type, TYPE_CHECKING
 
-from krrood.entity_query_language.entity import variable, set_of
-from krrood.entity_query_language.entity_result_processors import a
-from ..plan import PlanNode
-from ..utils import is_iterable, lazy_product
+from pycram.plan import PlanNode
+from pycram.utils import is_iterable, lazy_product
 
 if TYPE_CHECKING:
     from ..robot_plans import ActionDescription

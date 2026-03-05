@@ -7,9 +7,12 @@ from datetime import timedelta
 import numpy as np
 from sympy import true
 
-from krrood.entity_query_language.entity import entity, variable, and_, or_
-from krrood.entity_query_language.entity_result_processors import an
-from krrood.entity_query_language.symbolic import Variable, SymbolicExpression
+from krrood.entity_query_language.core.base_expressions import SymbolicExpression
+from krrood.entity_query_language.factories import and_
+from pycram.datastructures.dataclasses import Context
+from pycram.datastructures.pose import PoseStamped
+from pycram.pose_validator import reachability_validator
+from pycram.querying.predicates import GripperIsFree
 from semantic_digital_twin.reasoning.robot_predicates import is_body_in_gripper
 from semantic_digital_twin.robots.abstract_robot import AbstractRobot
 from semantic_digital_twin.datastructures.definitions import GripperState
@@ -17,26 +20,22 @@ from semantic_digital_twin.world_description.connections import ActiveConnection
 from semantic_digital_twin.world_description.world_entity import Body, Connection
 from typing_extensions import Union, Optional, Type, Any, Iterable, Dict
 
-from .pick_up import GraspingActionDescription
-from ...motions.container import OpeningMotion, ClosingMotion
-from ...motions.gripper import MoveGripperMotion
-from ....config.action_conf import ActionConfig
-from ....datastructures.dataclasses import Context
-from ....datastructures.enums import (
+from pycram.robot_plans.actions.core.pick_up import GraspingActionDescription
+from pycram.robot_plans.motions.container import OpeningMotion, ClosingMotion
+from pycram.robot_plans.motions.gripper import MoveGripperMotion
+from pycram.config.action_conf import ActionConfig
+from pycram.datastructures.enums import (
     Arms,
     ContainerManipulationType,
     ApproachDirection,
     VerticalAlignment,
 )
-from ....datastructures.grasp import GraspDescription
-from ....datastructures.partial_designator import PartialDesignator
-from ....datastructures.pose import PoseStamped
-from ....failures import ContainerManipulationError
-from ....language import SequentialPlan
-from ....pose_validator import reachability_validator
-from ....querying.predicates import GripperIsFree
-from ....view_manager import ViewManager
-from ....robot_plans.actions.base import ActionDescription, DescriptionType
+from pycram.datastructures.grasp import GraspDescription
+from pycram.datastructures.partial_designator import PartialDesignator
+from pycram.failures import ContainerManipulationError
+from pycram.language import SequentialPlan
+from pycram.view_manager import ViewManager
+from pycram.robot_plans.actions.base import ActionDescription, DescriptionType
 
 
 @dataclass

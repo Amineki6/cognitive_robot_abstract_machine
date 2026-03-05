@@ -6,38 +6,40 @@ from typing import List
 
 import numpy as np
 
-from krrood.entity_query_language.entity import and_
-from krrood.entity_query_language.symbolic import SymbolicExpression
+from krrood.entity_query_language.core.base_expressions import SymbolicExpression
+from krrood.entity_query_language.factories import an, entity, variable, and_
+from pycram.datastructures.dataclasses import Context
+from pycram.querying.predicates import GripperIsFree
+from pycram.view_manager import ViewManager
+from semantic_digital_twin.datastructures.definitions import TorsoState
 from semantic_digital_twin.reasoning.predicates import InsideOf
 from semantic_digital_twin.semantic_annotations.semantic_annotations import Drawer
 from semantic_digital_twin.world_description.world_entity import Body
 from typing_extensions import Union, Optional, Type, Any, Iterable, Dict
 
-from .facing import FaceAtActionDescription
-from ..core import (
+from pycram.robot_plans.actions.composite.facing import FaceAtActionDescription
+from pycram.robot_plans.actions.core import (
     ParkArmsActionDescription,
     NavigateActionDescription,
     PickUpActionDescription,
     PlaceActionDescription,
     OpenActionDescription,
+    MoveTorsoActionDescription,
 )
-from ....config.action_conf import ActionConfig
-from ....datastructures.dataclasses import Context
-from ....datastructures.enums import Arms, Grasp, VerticalAlignment
-from ....datastructures.grasp import GraspDescription
-from ....datastructures.partial_designator import PartialDesignator
-from ....datastructures.pose import PoseStamped
-from ....designators.location_designator import (
+from pycram.config.action_conf import ActionConfig
+from pycram.datastructures.enums import Arms, Grasp, VerticalAlignment
+from pycram.datastructures.grasp import GraspDescription
+from pycram.datastructures.partial_designator import PartialDesignator
+from pycram.datastructures.pose import PoseStamped
+from pycram.designators.location_designator import (
     ProbabilisticCostmapLocation,
     CostmapLocation,
     GiskardLocation,
 )
-from ....designators.object_designator import BelieveObject
-from ....failures import ObjectUnfetchable, ConfigurationNotReached
-from ....language import SequentialPlan
-from ....querying.predicates import GripperIsFree
-from ....robot_plans.actions.base import ActionDescription, DescriptionType
-from ....view_manager import ViewManager
+from pycram.designators.object_designator import BelieveObject
+from pycram.failures import ObjectUnfetchable, ConfigurationNotReached
+from pycram.language import SequentialPlan
+from pycram.robot_plans.actions.base import ActionDescription, DescriptionType
 
 
 @dataclass
@@ -78,14 +80,17 @@ class TransportAction(ActionDescription):
         return bodies
 
     def execute(self) -> None:
-        if containers := self.inside_container():
-            for container in containers:
-                sem_anno = container.get_semantic_annotations_by_type(Drawer)
-                if sem_anno:
-                    SequentialPlan(
-                        self.context,
-                        OpenActionDescription(sem_anno[0].handle.body, self.arm),
-                    ).perform()
+        for container in self.inside_container():
+            sem_anno = an(
+                entity(
+                    drawer := variable(Drawer, domain=self.world.semantic_annotations)
+                ).where(drawer.root == container)
+            ).tolist()
+            if sem_anno:
+                SequentialPlan(
+                    self.context,
+                    OpenActionDescription(sem_anno[0].handle.body, self.arm),
+                ).perform()
         SequentialPlan(self.context, ParkArmsActionDescription(Arms.BOTH)).perform()
         pickup_loc = CostmapLocation(
             target=PoseStamped.from_spatial_type(self.object_designator.global_pose),
@@ -109,6 +114,7 @@ class TransportAction(ActionDescription):
                 grasp_description=pickup_pose.grasp_description,
             ),
             ParkArmsActionDescription(Arms.BOTH),
+            MoveTorsoActionDescription(TorsoState.HIGH),
             NavigateActionDescription(
                 CostmapLocation(
                     target=self.target_location,

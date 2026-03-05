@@ -6,21 +6,21 @@ from datetime import timedelta
 import numpy as np
 from typing_extensions import Union, Optional, Type, Any, Iterable, Dict
 
-from krrood.entity_query_language.entity import and_
-from krrood.entity_query_language.symbolic import SymbolicExpression
+from krrood.entity_query_language.core.base_expressions import SymbolicExpression
+from krrood.entity_query_language.factories import and_
 from semantic_digital_twin.reasoning.robot_predicates import is_pose_free_for_robot
 from semantic_digital_twin.robots.abstract_robot import Camera
-from ..base import ActionDescription, DescriptionType
-from ...motions.robot_body import LookingMotion
-from ...motions.navigation import MoveMotion
-from ....config.action_conf import ActionConfig
+from pycram.robot_plans.actions.base import ActionDescription, DescriptionType
+from pycram.robot_plans.motions.robot_body import LookingMotion
+from pycram.robot_plans.motions.navigation import MoveMotion
+from pycram.config.action_conf import ActionConfig
 from ....datastructures.dataclasses import Context
-from ....datastructures.partial_designator import PartialDesignator
-from ....datastructures.pose import PoseStamped
-from ....failures import LookAtGoalNotReached
-from ....failures import NavigationGoalNotReachedError
-from ....language import SequentialPlan
-from ....validation.error_checkers import PoseErrorChecker
+from pycram.datastructures.partial_designator import PartialDesignator
+from pycram.datastructures.pose import PoseStamped
+from pycram.failures import LookAtGoalNotReached
+from pycram.failures import NavigationGoalNotReachedError
+from pycram.language import SequentialPlan
+from pycram.validation.error_checkers import PoseErrorChecker
 
 
 @dataclass

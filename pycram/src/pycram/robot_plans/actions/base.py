@@ -16,16 +16,13 @@ from typing_extensions import (
     Generator,
 )
 
-from krrood.entity_query_language.entity import (
-    variable,
-    evaluate_condition,
-    set_of,
-)
-from krrood.entity_query_language.entity_result_processors import a
-from krrood.entity_query_language.symbolic import Variable, SymbolicExpression
+from krrood.entity_query_language.core.base_expressions import SymbolicExpression
+from krrood.entity_query_language.core.variable import Variable
+from krrood.entity_query_language.entity import evaluate_condition
+from krrood.entity_query_language.factories import variable, a, set_of
 from ...datastructures.dataclasses import Context
-from ...designator import DesignatorDescription
-from ...failures import PlanFailure, ConditionNotSatisfied
+from pycram.designator import DesignatorDescription
+from pycram.failures import PlanFailure, ConditionNotSatisfied
 
 logger = logging.getLogger(__name__)
 

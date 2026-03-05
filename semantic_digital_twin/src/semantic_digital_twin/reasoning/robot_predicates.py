@@ -1,28 +1,47 @@
 from __future__ import annotations
 
 import itertools
-from copy import deepcopy
 from typing import Optional, List
 
 import trimesh.sample
-from krrood.entity_query_language.entity import (
-    variable,
+from krrood.entity_query_language.factories import (
     entity,
+    variable,
     and_,
     not_,
     contains,
+    an,
+    the,
 )
-from krrood.entity_query_language.entity_result_processors import an, the
 from krrood.entity_query_language.predicate import symbolic_function
 from .predicates import is_region_occupied
 
-from ..collision_checking.collision_detector import Collision, CollisionCheck
-from ..collision_checking.trimesh_collision_detector import TrimeshCollisionDetector
-from ..robots.abstract_robot import AbstractRobot, ParallelGripper, Manipulator
-from ..spatial_computations.raytracer import RayTracer
-from ..spatial_types import HomogeneousTransformationMatrix
+from semantic_digital_twin.collision_checking.collision_detector import (
+    ClosestPoints,
+    CollisionCheck,
+)
+from semantic_digital_twin.collision_checking.collision_manager import CollisionManager
+from semantic_digital_twin.collision_checking.collision_matrix import CollisionMatrix
+from semantic_digital_twin.collision_checking.collision_rules import (
+    AllowCollisionBetweenGroups,
+    AvoidExternalCollisions,
+    AllowSelfCollisions,
+)
+from semantic_digital_twin.collision_checking.pybullet_collision_detector import (
+    BulletCollisionDetector,
+)
+from semantic_digital_twin.collision_checking.trimesh_collision_detector import (
+    FCLCollisionDetector,
+)
+from semantic_digital_twin.robots.abstract_robot import (
+    AbstractRobot,
+    ParallelGripper,
+    Manipulator,
+)
+from semantic_digital_twin.spatial_computations.raytracer import RayTracer
+from semantic_digital_twin.spatial_types import HomogeneousTransformationMatrix
 from ..world_description.geometry import BoundingBox
-from ..world_description.world_entity import Body
+from semantic_digital_twin.world_description.world_entity import Body
 
 
 @symbolic_function
@@ -30,7 +49,7 @@ def robot_in_collision(
     robot: AbstractRobot,
     ignore_collision_with: Optional[List[Body]] = None,
     threshold: float = 0.001,
-) -> List[Collision]:
+) -> List[ClosestPoints]:
     """
     Check if the robot collides with any object in the world at the given pose.
 
@@ -43,28 +62,27 @@ def robot_in_collision(
     if ignore_collision_with is None:
         ignore_collision_with = []
 
-    body = variable(type_=Body, domain=robot._world.bodies_with_enabled_collision)
-    possible_collisions_bodies = an(
-        entity(body).where(
-            and_(
-                not_(contains(robot.bodies, body)),
-                not_(contains(ignore_collision_with, body)),
-            ),
-        ),
-    )
-    possible_collisions_bodies = possible_collisions_bodies.evaluate()
+    world = robot._world
 
-    tcd = TrimeshCollisionDetector(robot._world)
-
-    collisions = tcd.check_collisions(
-        {
-            CollisionCheck(robot_body, collision_body, threshold, robot._world)
-            for robot_body, collision_body in itertools.product(
-                robot.bodies_with_collisions, possible_collisions_bodies
+    with world.modify_world():
+        world.collision_manager.clear_temporary_rules()
+        world.collision_manager.add_temporary_rule(
+            AvoidExternalCollisions(
+                buffer_zone_distance=threshold,
+                robot=robot,
             )
-        }
-    )
-    return collisions
+        )
+        world.collision_manager.add_temporary_rule(AllowSelfCollisions(robot=robot))
+        world.collision_manager.add_temporary_rule(
+            AllowCollisionBetweenGroups(
+                body_group_a=robot.bodies, body_group_b=ignore_collision_with
+            )
+        )
+    world.collision_manager.update_collision_matrix()
+
+    collisions = world.collision_manager.compute_collisions()
+
+    return collisions.contacts
 
 
 @symbolic_function
@@ -93,7 +111,7 @@ def blocking(
     pose: HomogeneousTransformationMatrix,
     root: Body,
     tip: Body,
-) -> List[Collision]:
+) -> List[ClosestPoints]:
     """
     Get the bodies that are blocking the robot from reaching a given position.
     The blocking are all bodies that are in collision with the robot when reaching for the pose.
@@ -116,7 +134,7 @@ def blocking(
             contains(r.bodies, tip),
         )
     )
-    return robot_in_collision(robot.evaluate(), [])
+    return robot_in_collision(robot.first(), [])
 
 
 @symbolic_function
@@ -195,4 +213,4 @@ def is_pose_free_for_robot(
         robot_bb.max_z,
         pose,
     )
-    return not is_region_occupied(target_bb, robot._world, robot.bodies_with_collisions)
+    return not is_region_occupied(target_bb, robot._world, robot.bodies_with_collision)

@@ -7,23 +7,24 @@ from typing import Tuple, List
 
 from typing_extensions import Union, Optional, Type, Dict, Any, Iterable
 
-from krrood.entity_query_language.symbolic import SymbolicExpression
+from krrood.entity_query_language.core.base_expressions import SymbolicExpression
 from semantic_digital_twin.datastructures.definitions import (
     TorsoState,
     GripperState,
     StaticJointState,
 )
 from ....datastructures.dataclasses import Context
-from ....datastructures.enums import AxisIdentifier, Arms
-from ....datastructures.partial_designator import PartialDesignator
-from ....datastructures.pose import Vector3Stamped
-from ....failures import TorsoGoalNotReached, ConfigurationNotReached
-from ....language import SequentialPlan
-from ....view_manager import ViewManager
-from ....robot_plans.actions.base import ActionDescription, DescriptionType
-from ....robot_plans.motions.gripper import MoveGripperMotion
-from ....robot_plans.motions.robot_body import MoveJointsMotion
-from ....validation.goal_validator import create_multiple_joint_goal_validator
+from pycram.datastructures.enums import AxisIdentifier, Arms
+from pycram.datastructures.partial_designator import PartialDesignator
+from pycram.datastructures.pose import Vector3Stamped
+from pycram.datastructures.trajectory import PoseTrajectory
+from pycram.failures import TorsoGoalNotReached, ConfigurationNotReached
+from pycram.language import SequentialPlan
+from pycram.view_manager import ViewManager
+from pycram.robot_plans.actions.base import ActionDescription, DescriptionType
+from pycram.robot_plans.motions.gripper import MoveGripperMotion, MoveTCPWaypointsMotion
+from pycram.robot_plans.motions.robot_body import MoveJointsMotion
+from pycram.validation.goal_validator import create_multiple_joint_goal_validator
 
 
 @dataclass
@@ -239,7 +240,52 @@ class CarryAction(ActionDescription):
         )
 
 
+@dataclass
+class FollowTCPPathAction(ActionDescription):
+    """
+    Represents an action to move a robotic arm's TCP (Tool Center Point) along a
+    path of poses.
+    """
+
+    target_location: PoseTrajectory
+    """
+    Path poses for the TCP motion.
+    """
+
+    arm: Arms
+    """
+    Entry from the enum for which arm should be parked.
+    """
+
+    def execute(self) -> None:
+        target_locations = list(self.target_location.poses)
+
+        motion = MoveTCPWaypointsMotion(
+            target_locations,
+            self.arm,
+            allow_gripper_collision=True,
+        )
+
+        SequentialPlan(self.context, motion).perform()
+
+    def validate(
+        self,
+        result: Optional[Any] = None,
+        max_wait_time: timedelta = timedelta(seconds=2),
+    ):
+        pass
+
+    @classmethod
+    def description(
+        cls,
+        arm: Union[Iterable[Arms], Arms],
+        target_locations: Union[Iterable[PoseTrajectory], PoseTrajectory],
+    ) -> PartialDesignator[FollowTCPPathAction]:
+        return PartialDesignator(cls, target_location=target_locations, arm=arm)
+
+
 MoveTorsoActionDescription = MoveTorsoAction.description
 SetGripperActionDescription = SetGripperAction.description
 ParkArmsActionDescription = ParkArmsAction.description
 CarryActionDescription = CarryAction.description
+FollowTCPPathActionDescription = FollowTCPPathAction.description
