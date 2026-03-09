@@ -910,7 +910,6 @@ class HasSupportingSurface(HasStorageSpace, ABC):
             p_object_root.add_subcircuit(leaf(object_of_interest_p, surface_circuit))
             p_object_root.add_subcircuit(leaf(x_p, surface_circuit))
             p_object_root.add_subcircuit(leaf(y_p, surface_circuit))
-            ...
 
         return surface_circuit
 
