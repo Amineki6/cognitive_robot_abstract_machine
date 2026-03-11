@@ -4,6 +4,7 @@ import enum
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
+from functools import cached_property
 from types import NoneType, MethodType, FunctionType
 from typing import Dict, Iterable, Set
 
@@ -32,6 +33,7 @@ from krrood.ormatic.dao import (
     to_dao,
 )
 from krrood.ormatic.utils import leaf_types
+from inspect import getattr_static
 
 
 @dataclass
@@ -414,6 +416,14 @@ class MatchParameterizer:
     ) -> None:
 
         for key in obj.__dir__():
+
+            # Fetch class-level attribute without triggering descriptor protocol
+            attr = getattr_static(type(obj), key, None)
+
+            # Skip plain properties, cached properties, static/class methods
+            if isinstance(attr, (property, cached_property, staticmethod, classmethod)):
+                continue
+
             if key.startswith("_"):
                 continue
             try:

@@ -8,14 +8,20 @@ from typing import Self
 from pkg_resources import resource_filename
 
 from semantic_digital_twin.robots.robot_mixins import HasNeck, SpecifiesLeftRightArm
-from semantic_digital_twin.collision_checking.collision_matrix import MaxAvoidedCollisionsOverride
+from semantic_digital_twin.collision_checking.collision_matrix import (
+    MaxAvoidedCollisionsOverride,
+)
 from semantic_digital_twin.collision_checking.collision_rules import (
     SelfCollisionMatrixRule,
     AvoidAllCollisions,
     AvoidExternalCollisions,
     AvoidSelfCollisions,
 )
-from semantic_digital_twin.datastructures.definitions import StaticJointState, GripperState, TorsoState
+from semantic_digital_twin.datastructures.definitions import (
+    StaticJointState,
+    GripperState,
+    TorsoState,
+)
 from semantic_digital_twin.datastructures.joint_state import JointState
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.robots.abstract_robot import (
@@ -31,7 +37,10 @@ from semantic_digital_twin.robots.abstract_robot import (
 )
 from semantic_digital_twin.spatial_types import Quaternion, Vector3
 from semantic_digital_twin.world import World
-from semantic_digital_twin.world_description.connections import ActiveConnection, FixedConnection
+from semantic_digital_twin.world_description.connections import (
+    ActiveConnection,
+    FixedConnection,
+)
 
 
 @dataclass(eq=False)
@@ -307,7 +316,7 @@ class PR2(AbstractRobot, SpecifiesLeftRightArm, HasNeck):
 
         torso_low = JointState.from_mapping(
             name=PrefixedName("torso_low", prefix=self.name.name),
-            mapping=dict(zip(torso_joint, [0.0])),
+            mapping=dict(zip(torso_joint, [0.0115])),
             state_type=TorsoState.LOW,
         )
 

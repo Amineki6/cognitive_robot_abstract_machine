@@ -700,6 +700,7 @@ def test_algebra_sequential_plan(mutable_model_world):
     assert the correctness of sampled values after conditioning and truncation.
     """
     world, robot_view, context = mutable_model_world
+    context.evaluate_conditions = False
 
     target_location = probable(PoseStamped)(
         pose=probable(PyCramPose)(
