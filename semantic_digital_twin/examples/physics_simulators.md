@@ -15,7 +15,7 @@ kernelspec:
 # Physics Simulators
 
 This tutorial explains how to run physics simulations for a given world description.
-We use **MuJoCo** as an example backend, but the same workflow applies to other physics engines supported by MultiSim.
+We use **[MuJoCo](https://mujoco.readthedocs.io/en/stable/overview.html)** as an example backend, but the same workflow applies to other physics engines supported by MultiSim.
 
 # 1. Simulating a Predefined World
 
