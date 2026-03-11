@@ -33,7 +33,7 @@ We begin by importing the necessary components:
 ```{code-cell} ipython3
 from semantic_digital_twin.adapters.mjcf import MJCFParser
 from semantic_digital_twin.adapters.multi_sim import MujocoSim
-from base_simulator import SimulatorConstraints
+from physics_simulators.base_simulator import SimulatorConstraints
 import os # For path handling
 import time # For measuring simulation time
 ```
