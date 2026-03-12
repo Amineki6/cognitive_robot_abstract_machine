@@ -445,28 +445,17 @@ class QPController:
         """
         Uses substitutions for each symbol to compute the next commands for each joint.
         """
-        # 1. evaluate qp Data
         qp_data_raw = self.qp_data_factory.evaluate(
             world_state, life_cycle_state, float_variables
         )
-        # 2. apply filter
         qp_data_filtered = qp_data_raw.apply_filters()
-        # 3. apply conditioning
-        if self.config.conditioning_strategy is not None:
-            conditioning = self.config.conditioning_strategy()
-            conditioning.update(qp_data_filtered)
-            qp_data_filtered = qp_data_filtered.apply_conditioning(conditioning)
-        # 4. solve qp
         xdot_full = self.qp_solver.solver_call(qp_data_filtered)
-        # 5. turn xdot into control command
-        if self.config.conditioning_strategy is not None:
-            xdot_full = conditioning.unapply(xdot_full)
         return self.xdot_to_control_commands(xdot_full)
 
     def xdot_to_control_commands(self, xdot: np.ndarray) -> np.ndarray:
         offset = len(self.active_dofs) * (self.config.prediction_horizon - 2)
         offset_end = offset + len(self.active_dofs)
-        control_cmds = xdot[offset:offset_end]  # / self.config.mpc_dt**2
+        control_cmds = xdot[offset:offset_end]
         # divide by 4 because the world state has pos/vel/acc/jerk variables
         full_control_cmds = np.zeros(len(self.world_state_symbols) // 4)
         full_control_cmds[self.dof_filter] = control_cmds

@@ -8,7 +8,6 @@ from typing import Optional, Dict, Type
 
 from typing_extensions import TYPE_CHECKING
 
-from giskardpy.qp.qp_data import ConditioningStrategy
 from giskardpy.qp.qp_formulation import QPFormulation
 from giskardpy.qp.solvers.qp_solver_piqp import QPSolverPIQP
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
@@ -123,11 +122,6 @@ class QPControllerConfig:
     """
 
     qp_solver_class: Type[QPSolver] = field(default=QPSolverPIQP)
-    """
-    Reference to the resolved QP solver class.
-    """
-
-    conditioning_strategy: type[ConditioningStrategy] | None = field(default=None)
     """
     Reference to the resolved QP solver class.
     """

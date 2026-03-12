@@ -49,11 +49,7 @@ except Exception as e:
 
 
 @pytest.mark.parametrize("solver", installed_qp_solvers)
-@pytest.mark.parametrize(
-    "conditioning_strategies",
-    [None, JerkOneConditioningStrategy],
-)
-def test_joint_goal(solver, pr2_world_state_reset, conditioning_strategies):
+def test_joint_goal(solver, pr2_world_state_reset):
     msc = MotionStatechart()
     msc.add_node(
         sequence := Sequence(
@@ -80,7 +76,6 @@ def test_joint_goal(solver, pr2_world_state_reset, conditioning_strategies):
                 target_frequency=20,
                 prediction_horizon=7,
                 qp_solver_class=solver,
-                conditioning_strategy=conditioning_strategies,
             ),
         )
     )
