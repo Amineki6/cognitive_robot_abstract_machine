@@ -4,11 +4,10 @@ import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
 from functools import cached_property
-from typing import Optional, Dict, Type
+from typing import Dict, Type
 
 from typing_extensions import TYPE_CHECKING
 
-from giskardpy.qp.qp_formulation import QPFormulation
 from giskardpy.qp.solvers.qp_solver_piqp import QPSolverPIQP
 from semantic_digital_twin.datastructures.prefixed_name import PrefixedName
 from semantic_digital_twin.spatial_types.derivatives import DerivativeMap
@@ -86,12 +85,6 @@ class QPControllerConfig:
     """
     The highest derivative that will be considered in the QP formulation.
     ..warning:: Only change if you really know what you are doing.
-    """
-
-    qp_formulation: Optional[QPFormulation] = field(default_factory=QPFormulation)
-    """
-    Changes the formulation of the QP problem.
-    Check QPFormulation for more information.
     """
 
     retries_with_relaxed_constraints: int = field(default=5)
