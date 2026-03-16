@@ -49,3 +49,12 @@ git clone -b humble-devel --single-branch https://github.com/pal-robotics/pal_gr
                pal_gripper/pal_gripper_gazeboo \
                pal_gripper/pal_gripper_simulation \
                pal_gripper/pal_parallel_gripper_wrapper
+
+# ── Build the workspace ───────────────────────────────────────────────────────
+source /opt/ros/jazzy/setup.bash
+cd "$OVERLAY_WS"
+colcon build --merge-install
+
+# ── Source the workspace ──────────────────────────────────────────────────────
+grep -qxF "source $OVERLAY_WS/install/setup.bash" ~/.bashrc || \
+    echo "source $OVERLAY_WS/install/setup.bash" >> ~/.bashrc

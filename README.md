@@ -67,26 +67,19 @@ poetry install
 
 ## To run tests
 
-**1. Install system dependencies and set up the ROS 2 workspace**
+**1. Install system dependencies, set up and build the ROS 2 workspace**
 
 ```bash
-sudo bash .github/docker/setup_ros_workspace.sh
+sudo bash .github/docker/setup_ros_workspace.sh && source ~/.bashrc
 ```
 
-Then build the workspace and source it:
+**2. Run a test**
 
 ```bash
-cd ~/ros2_ws && colcon build --merge-install && \
-grep -qxF 'source ~/ros2_ws/install/setup.bash' ~/.bashrc || \
-    echo 'source ~/ros2_ws/install/setup.bash' >> ~/.bashrc && \
-source ~/.bashrc
+pytest test/<package>_test
 ```
 
-**2. Run the tests**
-
-```bash
-pytest test/
-```
+e.g. `pytest test/pycram_test`
 
 ## Contribution
 

@@ -22,12 +22,6 @@ RUN source /opt/ros/jazzy/setup.bash \
     && pip install poetry objgraph\
     && rm -rf cognitive_robot_abstract_machine
 
-# Setup ROS2 ws
-RUN source /opt/ros/jazzy/setup.bash \
-    && cd $OVERLAY_WS \
-    && colcon build --merge-install
-
-RUN echo "source $OVERLAY_WS/install/setup.bash" >> ~/.bashrc
 
 COPY entrypoint.sh /
 ENTRYPOINT ["bash", "/entrypoint.sh"]
