@@ -5,7 +5,8 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import Self
 
-from pkg_resources import resource_filename
+from importlib.resources import files
+from pathlib import Path
 
 from semantic_digital_twin.robots.robot_mixins import HasNeck, SpecifiesLeftRightArm
 from semantic_digital_twin.collision_checking.collision_matrix import (
@@ -63,7 +64,7 @@ class PR2(AbstractRobot, SpecifiesLeftRightArm, HasNeck):
         Loads the SRDF file for the PR2 robot, if it exists.
         """
         srdf_path = os.path.join(
-            resource_filename("semantic_digital_twin", "../../"),
+            Path(files("semantic_digital_twin")).parent.parent,
             "resources",
             "collision_configs",
             "pr2.srdf",
