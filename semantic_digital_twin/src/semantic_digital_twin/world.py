@@ -563,9 +563,6 @@ class World(HasSimulatorProperties):
 
         :param connection: The connection to add.
         """
-        logger.debug(
-            f"Adding connection with name {connection.name} between parent {connection.parent.name} and child {connection.child.name}"
-        )
         self._raise_error_if_belongs_to_other_world(connection)
         if not self.is_connection_in_world(connection):
             self.add_kinematic_structure_entity(connection.parent)
@@ -609,9 +606,6 @@ class World(HasSimulatorProperties):
 
         :param kinematic_structure_entity: The kinematic_structure_entity to add.
         """
-        logger.info(
-            f"Trying to add kinematic_structure_entity with name {kinematic_structure_entity.name}"
-        )
         self._raise_error_if_belongs_to_other_world(kinematic_structure_entity)
         if not self.is_kinematic_structure_entity_in_world(kinematic_structure_entity):
             self._add_kinematic_structure_entity(kinematic_structure_entity)
@@ -668,7 +662,6 @@ class World(HasSimulatorProperties):
 
         :raises AddingAnExistingSemanticAnnotationError: If the semantic annotation already exists
         """
-        logger.debug(f"Adding semantic annotation with name {semantic_annotation.name}")
         self._raise_error_if_belongs_to_other_world(semantic_annotation)
         if not self.is_semantic_annotation_in_world(semantic_annotation):
             self._add_semantic_annotation(semantic_annotation)

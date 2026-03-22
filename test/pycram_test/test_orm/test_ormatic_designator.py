@@ -1,5 +1,5 @@
 import pytest
-from sqlalchemy import select, text
+from sqlalchemy import select, text, UUID
 
 # The alternative mapping needs to be imported for the stretch to work properly
 import pycram.alternative_motion_mappings.stretch_motion_mapping  # type: ignore
@@ -120,7 +120,9 @@ def test_replay_from_db(pycram_testing_session, complex_plan):
     with simulated_robot:
         complex_plan.perform()
 
+    complex_plan.initial_world = None
     session = pycram_testing_session
+
     plan = complex_plan
     dao = to_dao(plan)
     session.add(dao)
