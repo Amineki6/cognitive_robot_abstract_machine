@@ -315,7 +315,7 @@ def test_model_synchronization_merge_full_world(rclpy_node):
         )
     ).parse()
 
-    def wait_for_sync(timeout=8.0, interval=0.05):
+    def wait_for_sync(timeout=3.0, interval=0.05):
         start = time.time()
         while time.time() - start < timeout:
             body_ids_1 = [body.id for body in w1.kinematic_structure_entities]
@@ -342,9 +342,12 @@ def test_model_synchronization_merge_full_world(rclpy_node):
 
     w1_connection_hashes = [hash(c) for c in w1.connections]
     w2_connection_hashes = [hash(c) for c in w2.connections]
-    assert w1_connection_hashes == w2_connection_hashes
-    assert len(w1.connections) == len(w2.connections)
-    assert len(w2.degrees_of_freedom) == len(w1.degrees_of_freedom)
+    assert (
+        w1_connection_hashes == w2_connection_hashes
+    ), f"w1: {[c.name for c in w1.connections]}, w2: {[c.name for c in w2.connections]}, If this feels flaky, contact @LucaKro"
+    assert [d.id for d in w1.degrees_of_freedom] == [
+        d.id for d in w2.degrees_of_freedom
+    ], f"w1: {[d.name for d in w1.degrees_of_freedom]}, w2: {[d.name for d in w2.degrees_of_freedom]}, If this feels flaky, contact @LucaKro"
 
     synchronizer_1.close()
     synchronizer_2.close()
