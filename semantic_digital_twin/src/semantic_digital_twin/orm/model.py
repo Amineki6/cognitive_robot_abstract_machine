@@ -184,8 +184,8 @@ class RotationMatrixMapping(AlternativeMapping[RotationMatrix]):
         return result
 
     @classmethod
-    def required_pre_build_classes(cls) -> List[Type[AlternativeMapping]]:
-        return [QuaternionMapping]
+    def required_pre_build_classes(cls) -> List[Type]:
+        return [Quaternion]
 
 
 @dataclass(eq=False)
@@ -270,6 +270,10 @@ class PoseMapping(AlternativeMapping[Pose]):
             orientation=quaternion_mapping.to_domain_object(),
             reference_frame=reference_frame,
         )
+
+    @classmethod
+    def required_pre_build_classes(cls) -> List[Type]:
+        return [Point3, Quaternion]
 
 
 class TrimeshType(TypeDecorator):

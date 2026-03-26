@@ -14,6 +14,7 @@ from pycram.robot_plans.actions.composite.transporting import TransportAction
 from pycram.robot_plans.actions.core.navigation import NavigateAction
 from pycram.robot_plans.actions.core.robot_body import MoveTorsoAction, ParkArmsAction
 from semantic_digital_twin.datastructures.definitions import TorsoState
+from semantic_digital_twin.spatial_types.spatial_types import Pose
 
 
 @pytest.fixture()
@@ -23,7 +24,9 @@ def simple_plan(immutable_model_world):
     plan = sequential(
         [
             NavigateAction(
-                PoseStamped.from_list([1.6, 1.9, 0], [0, 0, 0, 1], world.root),
+                Pose.from_xyz_quaternion(
+                    1.6, 1.9, 0, 0, 0, 0, 1, reference_frame=world.root
+                ),
                 True,
             ),
             MoveTorsoAction(TorsoState.HIGH),
@@ -32,16 +35,6 @@ def simple_plan(immutable_model_world):
         context=context,
     ).plan
     return plan
-
-
-def test_pose(pycram_testing_session, simple_plan):
-
-    session = pycram_testing_session
-    dao = to_dao(simple_plan)
-    session.add(dao)
-    session.commit()
-    result = session.scalars(select(PyCramPoseDAO)).all()
-    assert len(result) == 1
 
 
 def test_plan_serialization(pycram_testing_session, simple_plan):
@@ -70,8 +63,8 @@ def test_plan_serialization(pycram_testing_session, simple_plan):
 
 
 def test_replay_simple_plan(pycram_testing_session, simple_plan):
-    # with simulated_robot:
-    #     simple_plan.perform()
+    with simulated_robot:
+        simple_plan.perform()
     session = pycram_testing_session
 
     dao = to_dao(simple_plan)
@@ -89,8 +82,8 @@ def complex_plan(mutable_model_world):
     plan = execute_single(
         TransportAction(
             object_designator=world.get_body_by_name("milk.stl"),
-            target_location=PoseStamped.from_list(
-                [2.3, 2.5, 1], [0, 0, 0, 1], world.root
+            target_location=Pose.from_xyz_quaternion(
+                2.3, 2.5, 1, 0, 0, 0, 1, reference_frame=world.root
             ),
             arm=Arms.LEFT,
         ),
