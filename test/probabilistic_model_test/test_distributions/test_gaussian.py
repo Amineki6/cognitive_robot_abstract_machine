@@ -39,7 +39,7 @@ class GaussianDistributionTestCase(unittest.TestCase):
         ).as_composite_set()
         conditional, probability = self.distribution.truncated(event)
         self.assertIsInstance(conditional, TruncatedGaussianDistribution)
-        cdf = self.distribution.cumulative_distribution(np.array([1, 2]).reshape(-1, 1))
+        cdf = self.distribution.cumulative_distribution_function(np.array([1, 2]).reshape(-1, 1))
         self.assertAlmostEqual(probability, cdf[1] - cdf[0])
         self.assertEqual(conditional.lower, 1)
         self.assertEqual(conditional.upper, 2)
@@ -136,7 +136,7 @@ class TruncatedGaussianDistributionTestCase(unittest.TestCase):
         )
 
     def test_cdf(self):
-        cdf = self.distribution.cumulative_distribution(np.array([0, 3, -3]).reshape(-1, 1))
+        cdf = self.distribution.cumulative_distribution_function(np.array([0, 3, -3]).reshape(-1, 1))
         self.assertAlmostEqual(cdf[0], 0.285, places=3)
         self.assertEqual(cdf[1], 1)
         self.assertEqual(cdf[2], 0)
@@ -215,7 +215,7 @@ class TruncatedGaussianDistributionTestCase(unittest.TestCase):
         event = SimpleEvent.from_data({self.x: closed(1, 2)}).as_composite_set()
         conditional, probability = self.distribution.truncated(event)
         self.assertIsInstance(conditional, TruncatedGaussianDistribution)
-        cdf = self.distribution.cumulative_distribution(np.array([1, 2]).reshape(-1, 1))
+        cdf = self.distribution.cumulative_distribution_function(np.array([1, 2]).reshape(-1, 1))
         self.assertEqual(probability, cdf[1] - cdf[0])
         self.assertEqual(conditional.lower, 1)
         self.assertEqual(conditional.upper, 2)

@@ -9,7 +9,7 @@ import jax.numpy as jnp
 from scipy.special import logsumexp
 from sortedcontainers import SortedSet
 
-from probabilistic_model.learning.nyga_distribution import NygaLearning
+from probabilistic_model.learning.nyga_induction import NygaInduction
 from probabilistic_model.probabilistic_circuit.jax.input_layer import DiracDeltaLayer
 from probabilistic_model.probabilistic_circuit.jax.inner_layer import (
     SparseSumLayer,
@@ -216,7 +216,7 @@ class NygaDistributionTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.data = jax.random.normal(jax.random.PRNGKey(69), (1000, 1))
-        model = NygaLearning(Continuous("x"), min_samples_per_quantile=10)
+        model = NygaInduction(Continuous("x"), min_samples_per_quantile=10)
         cls.nx_model = model.fit(cls.data)
         cls.jax_model = ProbabilisticCircuit.from_rustworkx(cls.nx_model)
         cls.jax_model.root.validate()

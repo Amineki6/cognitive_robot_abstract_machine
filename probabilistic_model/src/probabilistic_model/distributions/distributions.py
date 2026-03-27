@@ -94,7 +94,7 @@ class ContinuousDistribution(UnivariateDistribution):
     def univariate_support(self) -> Interval:
         raise NotImplementedError
 
-    def cumulative_distribution(self, x: npt.NDArray) -> npt.NDArray:
+    def cumulative_distribution_function(self, x: npt.NDArray) -> npt.NDArray:
         """
         Calculate the cumulative distribution function at x.
         :param x: The data
@@ -105,8 +105,8 @@ class ContinuousDistribution(UnivariateDistribution):
     def probability_of_simple_event(self, event: SimpleEvent) -> float:
         interval: Interval = event[self.variable]
         points = interval_as_array(interval)
-        upper_bound_cdf = self.cumulative_distribution(points[:, (1,)])
-        lower_bound_cdf = self.cumulative_distribution(points[:, (0,)])
+        upper_bound_cdf = self.cumulative_distribution_function(points[:, (1,)])
+        lower_bound_cdf = self.cumulative_distribution_function(points[:, (0,)])
         return (upper_bound_cdf - lower_bound_cdf).sum()
 
     def log_truncated(self, event: Event) -> Tuple[Optional[Self], float]:
@@ -501,7 +501,7 @@ class IntegerDistribution(ContinuousDistribution, DiscreteDistribution):
                 result |= singleton(key)
         return result
 
-    def cumulative_distribution(self, x: npt.NDArray) -> npt.NDArray:
+    def cumulative_distribution_function(self, x: npt.NDArray) -> npt.NDArray:
         result = np.zeros((len(x),))
         maximum_value = max(x)
         for value, p in self.probabilities.items():
@@ -589,7 +589,7 @@ class DiracDeltaDistribution(ContinuousDistribution):
         result[within_tolerance] = np.log(self.density_cap)
         return result
 
-    def cumulative_distribution(self, x: npt.NDArray) -> npt.NDArray:
+    def cumulative_distribution_function(self, x: npt.NDArray) -> npt.NDArray:
         result = np.zeros((len(x),))
         result[x[:, 0] >= self.location - self.tolerance] = 1.0
         return result

@@ -264,7 +264,7 @@ class LeafUnit(Unit):
         self.result_of_current_query = self.distribution.log_likelihood(events)
 
     def cumulative_distribution(self, events: npt.NDArray):
-        self.result_of_current_query = self.distribution.cumulative_distribution(events)
+        self.result_of_current_query = self.distribution.cumulative_distribution_function(events)
 
     def probability_of_simple_event(self, event: SimpleEvent):
         self.result_of_current_query = self.distribution.probability_of_simple_event(
@@ -1008,7 +1008,7 @@ class ProbabilisticCircuit(ProbabilisticModel, SubclassJSONSerializer):
                     unit.log_forward()  # Synch trheads 1
         return self.root.result_of_current_query
 
-    def cumulative_distribution(self, events: npt.NDArray) -> npt.NDArray:
+    def cumulative_distribution_function(self, events: npt.NDArray) -> npt.NDArray:
         variable_to_index_map = self.variable_to_index_map
         for layer in reversed(self.layers):
             for unit in layer:

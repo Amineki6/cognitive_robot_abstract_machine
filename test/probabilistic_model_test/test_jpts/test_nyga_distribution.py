@@ -10,8 +10,8 @@ from scipy.special import logsumexp
 
 from probabilistic_model.distributions.distributions import DiracDeltaDistribution
 from probabilistic_model.distributions.uniform import UniformDistribution
-from probabilistic_model.learning.nyga_distribution import (
-    NygaLearning,
+from probabilistic_model.learning.nyga_induction import (
+    NygaInduction,
     InductionStep,
 )
 from probabilistic_model.probabilistic_circuit.rx.probabilistic_circuit import (
@@ -29,7 +29,7 @@ class InductionStepTestCase(unittest.TestCase):
     induction_step: InductionStep
 
     def setUp(self) -> None:
-        nyga_distribution = NygaLearning(
+        nyga_distribution = NygaInduction(
             self.variable, min_samples_per_quantile=1, min_likelihood_improvement=0.01
         )
         cumulative_log_weights = np.cumsum(np.log(self.weights))
@@ -148,7 +148,7 @@ class InductionStepTestCase(unittest.TestCase):
         self.assertEqual(index, 3)
 
     def test_compute_best_split_without_result(self):
-        self.induction_step.nyga_learning.min_samples_per_quantile = 4
+        self.induction_step.nyga_induction.min_samples_per_quantile = 4
         maximum, index = self.induction_step.compute_best_split()
         self.assertEqual(index, None)
         self.assertEqual(maximum, -float("inf"))
@@ -180,16 +180,16 @@ class InductionStepTestCase(unittest.TestCase):
 
     def test_fit(self):
         np.random.seed(69)
-        self.induction_step.nyga_learning.min_samples_per_quantile = 20
-        self.induction_step.nyga_learning.min_likelihood_improvement = 0
+        self.induction_step.nyga_induction.min_samples_per_quantile = 20
+        self.induction_step.nyga_induction.min_likelihood_improvement = 0
         data = np.random.normal(0, 1, 500).tolist()
-        distribution = self.induction_step.nyga_learning
+        distribution = self.induction_step.nyga_induction
         pc = distribution.fit(data)
         self.assertLessEqual(
             len(pc.root.subcircuits),
             int(
                 len(data)
-                / self.induction_step.nyga_learning.min_samples_per_quantile
+                / self.induction_step.nyga_induction.min_samples_per_quantile
             ),
         )
         self.assertAlmostEqual(logsumexp(pc.root.log_weights), 0.0)
@@ -197,7 +197,7 @@ class InductionStepTestCase(unittest.TestCase):
     def test_domain(self):
         np.random.seed(69)
         data = np.random.normal(0, 1, 100).tolist()
-        distribution = self.induction_step.nyga_learning
+        distribution = self.induction_step.nyga_induction
         pc = distribution.fit(data)
         domain = pc.support
         self.assertEqual(len(domain.simple_sets), 1)
@@ -219,7 +219,7 @@ class InductionStepTestCase(unittest.TestCase):
     def test_plot(self):
         np.random.seed(69)
         data = np.random.normal(0, 1, 100)
-        distribution = self.induction_step.nyga_learning
+        distribution = self.induction_step.nyga_induction
         pc = distribution.fit(data)
         fig = go.Figure(pc.plot())
         self.assertIsNotNone(fig)
@@ -227,7 +227,7 @@ class InductionStepTestCase(unittest.TestCase):
 
     def test_fit_from_singular_data(self):
         data = [1.0, 1.0]
-        distribution = self.induction_step.nyga_learning
+        distribution = self.induction_step.nyga_induction
         pc = distribution.fit(data)
         self.assertEqual(len(pc.nodes()), 1)
         self.assertIsInstance(pc.root.distribution, DiracDeltaDistribution)
@@ -235,11 +235,11 @@ class InductionStepTestCase(unittest.TestCase):
     def test_serialization(self):
         np.random.seed(69)
         data = np.random.normal(0, 1, 100).tolist()
-        distribution = NygaLearning(self.variable, min_likelihood_improvement=0.01)
+        distribution = NygaInduction(self.variable, min_likelihood_improvement=0.01)
         distribution.fit(data)
         serialized = to_json(distribution)
         deserialized = from_json(serialized)
-        self.assertIsInstance(deserialized, NygaLearning)
+        self.assertIsInstance(deserialized, NygaInduction)
         self.assertEqual(distribution, deserialized)
 
     def test_from_mixture_of_uniform_distributions(self):
@@ -249,7 +249,7 @@ class InductionStepTestCase(unittest.TestCase):
         sum_unit = SumUnit(probabilistic_circuit=pc1)
         sum_unit.add_subcircuit(u1, np.log(0.5))
         sum_unit.add_subcircuit(u2, np.log(0.5))
-        distribution = NygaLearning.from_uniform_mixture(
+        distribution = NygaInduction.from_uniform_mixture(
             sum_unit.probabilistic_circuit
         )
 
@@ -277,12 +277,12 @@ class InductionStepTestCase(unittest.TestCase):
 
 class FittedNygaDistributionTestCase(unittest.TestCase):
     x: Continuous = Continuous("x")
-    model: NygaLearning
+    model: NygaInduction
     data: np.array
 
     def setUp(self) -> None:
         np.random.seed(420)
-        self.model = NygaLearning(
+        self.model = NygaInduction(
             self.x, min_likelihood_improvement=0.001, min_samples_per_quantile=300
         )
         data = np.random.normal(0.0, 1.0, 1000).astype(np.float32)

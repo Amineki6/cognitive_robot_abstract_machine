@@ -249,7 +249,7 @@ class ProbabilisticModelPlotWidget(QWidget):
 
         # CDF Series if available
         try:
-            cdf = model.cumulative_distribution(samples.reshape(-1, 1))
+            cdf = model.cumulative_distribution_function(samples.reshape(-1, 1))
             cdf_series = QLineSeries()
             cdf_series.setName(CDF_TRACE_NAME)
             cdf_series.setPointsVisible(True)

@@ -43,7 +43,7 @@ class GaussianDistribution(ContinuousDistribution):
     def log_likelihood(self, x: npt.NDArray) -> npt.NDArray:
         return norm.logpdf(x[:, 0], loc=self.location, scale=self.scale)
 
-    def cumulative_distribution(self, x: npt.NDArray) -> npt.NDArray:
+    def cumulative_distribution_function(self, x: npt.NDArray) -> npt.NDArray:
         return norm.cdf(x[:, 0], loc=self.location, scale=self.scale)
 
     def univariate_log_mode(self) -> Tuple[AbstractCompositeSet, float]:
@@ -114,7 +114,7 @@ class GaussianDistribution(ContinuousDistribution):
     def log_conditional_from_simple_interval(
         self, interval: SimpleInterval
     ) -> Tuple[Optional[TruncatedGaussianDistribution], float]:
-        cdf_values = self.cumulative_distribution(simple_interval_as_array(interval).reshape(-1, 1))
+        cdf_values = self.cumulative_distribution_function(simple_interval_as_array(interval).reshape(-1, 1))
         probability = cdf_values[1] - cdf_values[0]
         if probability <= 0.0:
             return None, -np.inf
@@ -184,26 +184,26 @@ class TruncatedGaussianDistribution(
             - \mathbf{\Phi}\left( \frac{\text{self.interval.lower} - \mu}{\sigma} \right)
         """
         return (
-            GaussianDistribution.cumulative_distribution(self, np.array([[self.upper]]))
-            - GaussianDistribution.cumulative_distribution(self, np.array([[self.lower]]))
+            GaussianDistribution.cumulative_distribution_function(self, np.array([[self.upper]]))
+            - GaussianDistribution.cumulative_distribution_function(self, np.array([[self.lower]]))
         )[0]
 
     @property
-    def cdf_of_lower(self):
-        return GaussianDistribution.cumulative_distribution(self, np.array([[self.lower]]))[0]
+    def cumulative_density_function_to_lower(self):
+        return GaussianDistribution.cumulative_distribution_function(self, np.array([[self.lower]]))[0]
 
     def log_likelihood_without_bounds_check(self, x: npt.NDArray) -> npt.NDArray:
         return GaussianDistribution.log_likelihood(self, x) - np.log(
             self.normalizing_constant
         )
 
-    def cumulative_distribution(self, x: npt.NDArray) -> npt.NDArray:
+    def cumulative_distribution_function(self, x: npt.NDArray) -> npt.NDArray:
         result = np.zeros(len(x))
         non_zero_condition = self.left_included_condition(x)
         x_non_zero = x[non_zero_condition].reshape(-1, 1)
-        cdf_non_zero = GaussianDistribution.cumulative_distribution(self, x_non_zero)
+        cumulative_density_function_non_zero = GaussianDistribution.cumulative_distribution_function(self, x_non_zero)
         result[non_zero_condition[:, 0]] = (
-            cdf_non_zero - self.cdf_of_lower
+            cumulative_density_function_non_zero - self.cumulative_density_function_to_lower
         ) / self.normalizing_constant
         result = np.minimum(1, result)
         return result

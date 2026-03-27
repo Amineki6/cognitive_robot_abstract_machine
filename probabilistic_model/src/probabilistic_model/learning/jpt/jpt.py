@@ -15,7 +15,7 @@ from typing_extensions import Self
 from probabilistic_model.learning.jpt.variables import (
     AnnotatedVariable
 )
-from probabilistic_model.learning.nyga_distribution import NygaLearning
+from probabilistic_model.learning.nyga_induction import NygaInduction
 from probabilistic_model.distributions.distributions import (
     DiracDeltaDistribution,
     SymbolicDistribution,
@@ -316,7 +316,7 @@ class JointProbabilityTree(SubclassJSONSerializer):
 
         for index, annotated_variable in enumerate(self.annotated_variables):
             if isinstance(annotated_variable.variable, Continuous):
-                distribution = NygaLearning(
+                distribution = NygaInduction(
                     annotated_variable.variable,
                     min_likelihood_improvement=annotated_variable.min_likelihood_improvement,
                     min_samples_per_quantile=annotated_variable.min_samples_per_quantile,

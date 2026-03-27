@@ -20,15 +20,15 @@ class UniformDistribution(ContinuousDistributionWithFiniteSupport):
     """
 
     def log_likelihood_without_bounds_check(self, x: npt.NDArray) -> npt.NDArray:
-        return np.full((len(x),), self.log_pdf_value())
+        return np.full((len(x),), self.log_probability_density_function_value())
 
-    def cumulative_distribution(self, x: npt.NDArray) -> npt.NDArray:
+    def cumulative_distribution_function(self, x: npt.NDArray) -> npt.NDArray:
         result = (x - self.lower) / (self.upper - self.lower)
         result = np.minimum(1, np.maximum(0, result))
         return result[:, 0]
 
     def univariate_log_mode(self) -> Tuple[AbstractCompositeSet, float]:
-        return self.interval.as_composite_set(), self.log_pdf_value()
+        return self.interval.as_composite_set(), self.log_probability_density_function_value()
 
     def log_conditional_from_simple_interval(
         self, interval: SimpleInterval
@@ -53,13 +53,13 @@ class UniformDistribution(ContinuousDistributionWithFiniteSupport):
     def sample(self, amount: int) -> npt.NDArray:
         return np.random.uniform(self.lower, self.upper, (amount, 1))
 
-    def pdf_value(self) -> float:
+    def probability_density_function_value(self) -> float:
         """
         Calculate the density of the uniform distribution.
         """
-        return np.exp(self.log_pdf_value())
+        return np.exp(self.log_probability_density_function_value())
 
-    def log_pdf_value(self) -> float:
+    def log_probability_density_function_value(self) -> float:
         """
         Calculate the log-density of the uniform distribution.
         """
@@ -79,7 +79,7 @@ class UniformDistribution(ContinuousDistributionWithFiniteSupport):
                     \int_{-\infty}^{\infty} (x - center)^{order} pdf(x) dx = \frac{p(x-center)^(1+order)}{1+order}
 
             """
-            return (self.pdf_value() * (x - center) ** (order + 1)) / (order + 1)
+            return (self.probability_density_function_value() * (x - center) ** (order + 1)) / (order + 1)
 
         result = evaluate_integral_at(self.upper) - evaluate_integral_at(self.lower)
 
@@ -130,7 +130,7 @@ class UniformDistribution(ContinuousDistributionWithFiniteSupport):
         """
         Create a Plotly trace for the probability density function (PDF) of the uniform distribution.
         """
-        probability_density_values = [0, 0, None, self.pdf_value(), self.pdf_value(), None, 0, 0]
+        probability_density_values = [0, 0, None, self.probability_density_function_value(), self.probability_density_function_value(), None, 0, 0]
         probability_density_trace = go.Scatter(
             x=self.x_axis_points_for_plotly(),
             y=probability_density_values,
@@ -146,7 +146,7 @@ class UniformDistribution(ContinuousDistributionWithFiniteSupport):
         """
         x = self.x_axis_points_for_plotly()
         cumulative_density_values = [
-            value if value is None else self.cumulative_distribution(np.array([[value]]))[0] for value in x
+            value if value is None else self.cumulative_distribution_function(np.array([[value]]))[0] for value in x
         ]
         cumulative_density_trace = go.Scatter(
             x=x,
@@ -161,7 +161,7 @@ class UniformDistribution(ContinuousDistributionWithFiniteSupport):
         probability_density_trace = self.probability_density_function_trace()
         cumulative_density_trace = self.cumulative_density_function_trace()
 
-        height = self.pdf_value() * SCALING_FACTOR_FOR_EXPECTATION_IN_PLOT
+        height = self.probability_density_function_value() * SCALING_FACTOR_FOR_EXPECTATION_IN_PLOT
 
         mode_trace = self.univariate_mode_traces(self.mode()[0], height)
         expectation_trace = self.univariate_expectation_trace(height)

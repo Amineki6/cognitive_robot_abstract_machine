@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 import tqdm
 from random_events.variable import Continuous
 
-from probabilistic_model.learning.nyga_distribution import NygaLearning
+from probabilistic_model.learning.nyga_induction import NygaInduction
 from probabilistic_model.interfaces.mlflow_integration import (
     infer_signature,
     ProbabilisticModelWrapper,
@@ -31,7 +31,7 @@ for component in tqdm.trange(number_of_components, desc="Generating data"):
 data = np.concatenate(data, axis=0)
 variable = Continuous("x")
 
-nx_model = NygaLearning(variable, min_samples_per_quantile=min_samples_per_quantile)
+nx_model = NygaInduction(variable, min_samples_per_quantile=min_samples_per_quantile)
 
 run = mlflow.start_run(run_name="Integration example with mlflow")
 

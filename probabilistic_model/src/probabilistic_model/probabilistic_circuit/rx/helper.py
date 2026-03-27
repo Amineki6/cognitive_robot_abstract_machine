@@ -48,7 +48,7 @@ def uniform_measure_of_simple_event(simple_event: SimpleEvent) -> ProbabilisticC
                 uniform = UniformDistribution(variable=variable, interval=assignment_)
                 distribution.add_subcircuit(
                     UnivariateContinuousLeaf(uniform, probabilistic_circuit=result),
-                    1 / uniform.pdf_value(),
+                    1 / uniform.probability_density_function_value(),
                 )
             distribution.normalize()
 

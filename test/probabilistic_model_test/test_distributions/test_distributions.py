@@ -90,7 +90,7 @@ class IntegerDistributionTestCase(unittest.TestCase):
         self.assertEqual(deserialized, self.model)
 
     def test_cdf(self):
-        cdf = self.model.cumulative_distribution(np.array([0, 1, 2, 3, 4]).reshape(-1, 1))
+        cdf = self.model.cumulative_distribution_function(np.array([0, 1, 2, 3, 4]).reshape(-1, 1))
         self.assertAlmostEqual(cdf[0], 0)
         self.assertAlmostEqual(cdf[1], 4 / 20)
         self.assertAlmostEqual(cdf[2], 9 / 20)
@@ -165,7 +165,7 @@ class DiracDeltaDistributionTestCase(unittest.TestCase):
         self.assertEqual(pdf[1], 0)
 
     def test_cdf(self):
-        cdf = self.model.cumulative_distribution(np.array([-1, 0, 1]).reshape(-1, 1))
+        cdf = self.model.cumulative_distribution_function(np.array([-1, 0, 1]).reshape(-1, 1))
         self.assertEqual(cdf[0], 0)
         self.assertEqual(cdf[1], 1)
         self.assertEqual(cdf[2], 1)

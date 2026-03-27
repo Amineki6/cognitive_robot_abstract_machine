@@ -119,7 +119,7 @@ class ProbabilisticModel(ABC):
         :return: The log-likelihood of the event with shape (#events).
         """
 
-    def cumulative_distribution(self, events: npt.NDArray) -> npt.NDArray:
+    def cumulative_distribution_function(self, events: npt.NDArray) -> npt.NDArray:
         """
         Calculate the cumulative distribution function of an event-array.
 
@@ -486,7 +486,7 @@ class ProbabilisticModel(ABC):
 
         # add cdf trace if implemented
         try:
-            cdf = self.cumulative_distribution(samples.reshape(-1, 1))
+            cdf = self.cumulative_distribution_function(samples.reshape(-1, 1))
             cdf_trace = [
                 go.Scatter(
                     x=samples,
