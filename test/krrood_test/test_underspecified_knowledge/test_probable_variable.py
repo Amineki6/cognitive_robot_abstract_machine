@@ -160,7 +160,7 @@ def test_probable_variable_with_concrete_kwarg():
 def test_new_underspecified_with_factory():
 
     prob_q = underspecified(KRROODPose)(
-        position=underspecified(KRROODPosition.from_abc, target_type=Position)(
+        position=underspecified(KRROODPosition.from_abc, target_type=KRROODPosition)(
             a=..., b=..., c=...
         ),
         orientation=KRROODOrientation(x=0.0, y=0.0, z=0.0, w=1.0),
