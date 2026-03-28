@@ -74,7 +74,8 @@ class TransportAction(ActionDescription):
             entity(
                 drawer := variable(Drawer, domain=self.world.semantic_annotations)
             ).where(drawer.root == container)
-        ).to_list()
+        )
+        drawer_annotation = list(drawer_annotation.evaluate())
         if len(drawer_annotation) == 0:
             return
         handle = drawer_annotation[0].handle.root
@@ -89,13 +90,13 @@ class TransportAction(ActionDescription):
                                     handle.global_pose,
                                     reachable_arm=self.arm,
                                     reachable=True,
-                                    context=self.context,
+                                    context=self.plan.context,
                                 )
                             )
                         ),
                         True,
                     ),
-                    OpenAction(drawer_annotation[0].handle.body, self.arm),
+                    OpenAction(handle, self.arm),
                 ]
             )
         ).perform()

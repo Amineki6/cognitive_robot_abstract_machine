@@ -133,17 +133,16 @@ As the name implies, this action designator is used to open or close the gripper
 The procedure is similar to the last time, but this time we will shorten it a bit.
 
 ```python
-from pycram.robot_plans import SetGripperActionDescription
 from pycram.motion_executor import simulated_robot
+from pycram.robot_plans.actions.core.robot_body import SetGripperAction
 from pycram.datastructures.enums import Arms
 from semantic_digital_twin.datastructures.definitions import GripperState
-from pycram.language import SequentialPlan
 
 gripper = Arms.RIGHT
 motion = GripperState.OPEN
 
 with simulated_robot:
-    SequentialPlan(context, SetGripperActionDescription(gripper=gripper, motion=[motion])).perform()
+    execute_single(SetGripperAction(gripper=gripper, motion=motion), context).perform()
 ```
 
 ## Park Arms
@@ -171,20 +170,17 @@ the example on object designators for more details.
 To start we need an environment in which we can pick up and place things as well as an object to pick up.
 
 ```python
-from pycram.robot_plans import PickUpActionDescription, PlaceActionDescription, ParkArmsActionDescription, MoveTorsoActionDescription, NavigateActionDescription
 from pycram.motion_executor import simulated_robot
 from pycram.datastructures.enums import Arms, ApproachDirection, VerticalAlignment
 from semantic_digital_twin.datastructures.definitions import TorsoState
-from pycram.datastructures.pose import PoseStamped
 from pycram.datastructures.grasp import GraspDescription
-from pycram.language import SequentialPlan
+
 
 arm = Arms.RIGHT
 
 with simulated_robot:
-    SequentialPlan(
-        context,
-        ParkArmsActionDescription(Arms.BOTH),
+    sequential(
+        [ParkArmsActionDescription(Arms.BOTH),
         MoveTorsoActionDescription([TorsoState.HIGH]),
         NavigateActionDescription(
             [PoseStamped.from_list([1.8, 2.4, 0.0], [0.0, 0.0, 0.0, 1], frame=world.root)]
@@ -204,7 +200,8 @@ with simulated_robot:
                 PoseStamped.from_list([2.4, 2.1, 1], [0, 0, 0, 1], world.root)
             ],
             arm=arm,
-        ),
+        )],
+        context=context,
     ).perform()
 ```
 
