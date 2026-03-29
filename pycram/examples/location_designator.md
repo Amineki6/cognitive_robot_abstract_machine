@@ -119,7 +119,8 @@ For this example we need the milk as well as the PR2, so if you did not spawn th
 designator you can spawn them with the following cell.
 
 ```python
-location_description = CostmapLocation(target=world.get_body_by_name("milk.stl").global_pose, visible=True, context=context)
+from semantic_digital_twin.spatial_types.spatial_types import Pose, Point3
+location_description = CostmapLocation(target=Pose(Point3.from_iterable([-1, 0, 1.2]), reference_frame=world.root), visible=True, context=context)
 
 plan = execute_single(NavigateAction(next(iter(location_description))), context=context)
 
@@ -138,7 +139,7 @@ already have a milk spawned in you world you can ignore the following cell.
 
 ```python
 
-location_description = CostmapLocation(target=world.get_body_by_name("milk.stl").global_pose, visible=True, context=context)
+location_description = CostmapLocation(target=Pose(Point3.from_iterable([-1, 0, 1.2]), reference_frame=world.root), visible=True, context=context)
 
 for i, pose in enumerate(location_description):
     print(pose)
