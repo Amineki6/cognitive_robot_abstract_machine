@@ -59,6 +59,14 @@ jobs:
           source /opt/ros/cram-env/bin/activate
           python generate_orm.py
 
+      - name: Build ROS2 packages
+        run: |
+          source /opt/ros/overlay_ws/install/setup.bash
+          source /opt/ros/cram-env/bin/activate
+          cd /opt/ros/overlay_ws/src
+          ln -s /opt/ros/cognitive_robot_abstract_machine/cram_ros2_packages cram_ros2_packages
+          colcon build --merge-install
+
       - name: Run tests
         run: |
           source /opt/ros/overlay_ws/install/setup.bash
