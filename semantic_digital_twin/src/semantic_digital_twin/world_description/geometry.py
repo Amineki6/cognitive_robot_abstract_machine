@@ -9,6 +9,7 @@ from abc import ABC, abstractmethod
 from copy import deepcopy
 from dataclasses import dataclass, field, fields
 from functools import cached_property
+from plyfile import PlyData
 
 import numpy as np
 import trimesh
@@ -439,6 +440,51 @@ class Mesh(Shape):
         return file_mesh
 
     @classmethod
+    def from_ply_file(
+        cls,
+        ply_file_path: str,
+        texture_file_path: Optional[str] = None,
+        origin: Optional[HomogeneousTransformationMatrix] = None,
+        scale: Optional[Scale] = None,
+    ) -> Mesh:
+        """
+        Create a Mesh from a PLY file path and an optional texture file path.
+        Ply files are not supported by RViz2, so we need to convert them to OBJ files with the textures intact.
+        """
+        texture_image = Image.open(texture_file_path)
+        ply_file = PlyData.read(ply_file_path)
+        # Raw data
+        vertices = np.stack(
+            [ply_file["vertex"]["x"], ply_file["vertex"]["y"], ply_file["vertex"]["z"]],
+            axis=-1,
+        )
+
+        texture_coordinates = np.stack(
+            [ply_file["texcoord"]["s"], ply_file["texcoord"]["t"]], axis=-1
+        )
+
+        faces = np.stack([np.array(f["vertex_indices"]) for f in ply_file["face"]])
+        texture_coordinate_indices = np.stack(
+            [np.array(f["texcoord_indices"]) for f in ply_file["face"]]
+        )
+
+        # Build per-vertex UV by unpacking face-corner UVs
+        # texture_coordinate_indices[f, c] -> index into texture_coordinates for face f, corner c
+        uv_per_corner = texture_coordinates[texture_coordinate_indices]
+
+        vertices_unindexed = vertices[faces.reshape(-1)]
+        uv_unindexed = uv_per_corner.reshape(-1, 2)
+        faces_new = np.arange(len(vertices_unindexed)).reshape(-1, 3)
+
+        mesh = trimesh.Trimesh(
+            vertices=vertices_unindexed,
+            faces=faces_new,
+            visual=trimesh.visual.TextureVisuals(uv=uv_unindexed, image=texture_image),
+        )
+
+        return Mesh.from_trimesh(mesh=mesh, origin=origin, scale=scale, file_type="obj")
+
+    @classmethod
     def from_trimesh(
         cls,
         mesh: trimesh.Trimesh,
@@ -447,7 +493,7 @@ class Mesh(Shape):
         uv: Optional[np.ndarray] = None,
         texture_file_path: Optional[str] = None,
         dirname: str = "/tmp",
-        file_type: str = "stl",
+        file_type: str = "obj",
     ) -> "Mesh":
         if origin is None:
             origin = HomogeneousTransformationMatrix()
