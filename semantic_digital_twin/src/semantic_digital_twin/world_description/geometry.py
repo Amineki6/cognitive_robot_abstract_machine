@@ -536,6 +536,9 @@ class Mesh(Shape):
             elif file_type == "stl":
                 mesh.export(tmp_path, file_type="stl")
 
+            elif file_type == "dae":
+                mesh.export(tmp_path, file_type="dae")
+
             else:
                 raise ValueError(f"Unsupported file type: {file_type}")
 

@@ -17,13 +17,15 @@ from semantic_digital_twin.semantic_annotations.semantic_annotations import (
     Floor,
     Wall,
     Door,
+    Handle,
+    Hinge,
 )
-from semantic_digital_twin.spatial_types import HomogeneousTransformationMatrix
+from semantic_digital_twin.spatial_types import HomogeneousTransformationMatrix, Vector3
 from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.connections import (
     Connection6DoF,
 )
-from semantic_digital_twin.world_description.geometry import Mesh, Scale, Box
+from semantic_digital_twin.world_description.geometry import Mesh, Scale, Box, Color
 from semantic_digital_twin.world_description.shape_collection import ShapeCollection
 from semantic_digital_twin.world_description.world_entity import (
     Body,
@@ -370,7 +372,6 @@ class Sage10kObject(Sage10kWithID):
         body = Body(name=PrefixedName(self.id))
 
         # Define the pose for the object in the world
-        # The sage_10k_dataset uses position (x, y, z) and rotation (x, y, z as RPY)
         root_T_body = HomogeneousTransformationMatrix.from_xyz_rpy(
             self.position.x,
             self.position.y,
@@ -380,18 +381,12 @@ class Sage10kObject(Sage10kWithID):
             child_frame=body,
         )
 
-        # Load the mesh and texture using the stable Mesh.from_file method
-        # It automatically handles trimesh loading and applies the texture
-        mesh = Mesh.from_trimesh(
-            trimesh.load_mesh(str(ply_file)),
+        # Load the mesh and texture
+        mesh = Mesh.from_ply_file(
+            ply_file_path=str(ply_file),
+            texture_file_path=str(texture_file),
             origin=HomogeneousTransformationMatrix.from_xyz_rpy(reference_frame=body),
-            file_type="obj",
         )
-        # mesh = Mesh.from_file(
-        #     file_path=str(ply_file),
-        #     texture_file_path=str(texture_file),
-        #     origin=HomogeneousTransformationMatrix.from_xyz_rpy(reference_frame=body),
-        # )
 
         # Create a Body with the loaded mesh as both visual and collision geometry
         visual = ShapeCollection([mesh], reference_frame=body)
@@ -566,11 +561,11 @@ class Sage10kDoor(Sage10kWithID):
                 Mesh.from_trimesh(
                     origin=HomogeneousTransformationMatrix(reference_frame=body),
                     mesh=body.collision.combined_mesh,
-                    # texture_file_path=str(
-                    #     directory_path
-                    #     / "materials"
-                    #     / f"{self.door_material}_texture.png"
-                    # ),
+                    texture_file_path=str(
+                        directory_path
+                        / "materials"
+                        / f"{self.door_material}_texture.png"
+                    ),
                 )
             ],
             reference_frame=body,
@@ -581,7 +576,40 @@ class Sage10kDoor(Sage10kWithID):
         with world.modify_world():
             wall_annotation.add_aperture(annotation.entry_way)
 
+        self._create_handle_in_world(world, annotation)
+        self._create_hinge_in_world(world, annotation)
         return annotation
+
+    def _create_handle_in_world(self, world: World, door: Door):
+        door_T_handle = HomogeneousTransformationMatrix.from_xyz_rpy(
+            y=0.1,
+            reference_frame=door.root,
+        )
+        world_root_T_handle = world.transform(door_T_handle, world.root)
+        handle_name = PrefixedName(name=f"{self.id}_handle", prefix=self.id)
+
+        with world.modify_world():
+            handle = Handle.create_with_new_body_in_world(
+                name=handle_name,
+                world=world,
+                world_root_T_self=world_root_T_handle,
+                scale=Scale(x=0.1, y=0.1, z=0.05),
+            )
+            door.add_handle(handle)
+
+    def _create_hinge_in_world(self, world: World, door: Door):
+        world_root_T_hinge = door.calculate_world_T_hinge_based_on_handle(Vector3.Z())
+
+        with world.modify_world():
+            hinge = Hinge.create_with_new_body_in_world(
+                name=PrefixedName(name="hinge", prefix=door.root.name.name),
+                world=world,
+                active_axis=Vector3.Z(),
+                world_root_T_self=world_root_T_hinge,
+            )
+            door.add_hinge(hinge)
+
+        return hinge
 
 
 @dataclass
@@ -779,9 +807,6 @@ class Sage10kScene(Sage10kWithID):
         )
 
     def create_world(self) -> World:
-        if self.directory_path is None:
-            raise ValueError("Directory path is not set.")
-
         world = World()
 
         root = Body(name=PrefixedName(name="root"))
