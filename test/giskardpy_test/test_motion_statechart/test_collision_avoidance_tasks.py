@@ -56,6 +56,7 @@ from semantic_digital_twin.spatial_types import (
     HomogeneousTransformationMatrix,
     Vector3,
 )
+from semantic_digital_twin.spatial_types.spatial_types import Pose
 from semantic_digital_twin.world import World
 from semantic_digital_twin.world_description.connections import (
     FixedConnection,
@@ -583,7 +584,7 @@ def test_avoid_collision_go_around_corner(pr2_with_box):
                         CartesianPose(
                             root_link=pr2_with_box.root,
                             tip_link=r_tip,
-                            goal_pose=HomogeneousTransformationMatrix.from_xyz_axis_angle(
+                            goal_pose=Pose.from_xyz_axis_angle(
                                 x=0.8,
                                 y=-0.38,
                                 z=0.84,

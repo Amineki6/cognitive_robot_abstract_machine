@@ -1078,7 +1078,7 @@ class TestCollisionAvoidanceGoals:
         cart_goal = CartesianPose(
             root_link=fake_table_setup.default_root,
             tip_link=fake_table_setup.r_tip,
-            goal_pose=cas.HomogeneousTransformationMatrix.from_xyz_axis_angle(
+            goal_pose=cas.Pose.from_xyz_axis_angle(
                 x=0.8,
                 y=-0.38,
                 z=0.84,
@@ -1086,7 +1086,6 @@ class TestCollisionAvoidanceGoals:
                 angle=np.pi / 2.0,
                 reference_frame=fake_table_setup.default_root,
             ),
-            weight=DefaultWeights.WEIGHT_ABOVE_CA,
         )
         msc.add_node(cart_goal)
 
@@ -1094,35 +1093,34 @@ class TestCollisionAvoidanceGoals:
             UpdateTemporaryCollisionRules(
                 temporary_rules=[
                     AvoidExternalCollisions(
-                        buffer_zone_distance=0.1, robot=fake_table_setup.api.robot
+                        buffer_zone_distance=0.1,
+                        violated_distance=0.0,
+                        robot=fake_table_setup.api.robot,
                     )
                 ]
             )
         )
         msc.add_node(ExternalCollisionAvoidance(robot=fake_table_setup.api.robot))
-        local_min = LocalMinimumReached()
-        msc.add_node(local_min)
-        end = EndMotion()
-        msc.add_node(end)
-        end.start_condition = local_min.observation_variable
+        msc.add_node(local_min := LocalMinimumReached())
+        msc.add_node(EndMotion.when_true(local_min))
 
         fake_table_setup.api.execute(msc)
         fake_table_setup.check_cpi_geq(fake_table_setup.get_l_gripper_links(), 0.05)
-        fake_table_setup.check_cpi_leq(
+        fake_table_setup.check_cpi_geq(
             [
                 GiskardBlackboard().executor.context.world.get_kinematic_structure_entity_by_name(
                     "r_gripper_l_finger_tip_link"
                 )
             ],
-            0.04,
+            0.045,
         )
-        fake_table_setup.check_cpi_leq(
+        fake_table_setup.check_cpi_geq(
             [
                 GiskardBlackboard().executor.context.world.get_kinematic_structure_entity_by_name(
                     "r_gripper_r_finger_tip_link"
                 )
             ],
-            0.04,
+            0.045,
         )
 
     def test_avoid_collision_box_between_3_boxes(self, pocky_pose_setup: PR2Tester):
