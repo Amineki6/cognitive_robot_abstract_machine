@@ -369,7 +369,8 @@ class Sage10kObject(Sage10kWithID):
     ) -> Body:
         ply_file = directory / "objects" / f"{self.source_id}.ply"
         texture_file = directory / "objects" / f"{self.source_id}_texture.png"
-        body = Body(name=PrefixedName(self.id))
+        body = Body()
+        body.name = PrefixedName(name=str(body.id), prefix=self.id)
 
         # Define the pose for the object in the world
         root_T_body = HomogeneousTransformationMatrix.from_xyz_rpy(

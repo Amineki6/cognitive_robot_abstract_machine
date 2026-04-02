@@ -11,12 +11,20 @@ from semantic_digital_twin.world import World
 def verify_scene(world: World, scene: Sage10kScene):
     """
     Verify that the object positions of the scene are the same as in the world.
+    Sometimes the scene contains two objects with the same ID. In that case, this check is skipped
     :param world: The world created from the scene.
     :param scene: The scene.
     """
+
     for room in scene.rooms:
         for obj in room.objects:
-            body = world.get_body_by_name(obj.id)
+            matching_bodies = [b for b in world.bodies if b.name.prefix == obj.id]
+
+            if len(matching_bodies) > 1:
+                continue
+
+            body = matching_bodies[0]
+
             global_position = body.global_pose.to_position()
             assert np.isclose(global_position.x, obj.position.x)
             assert np.isclose(global_position.y, obj.position.y)
@@ -32,5 +40,4 @@ def test_loader(rclpy_node):
         node=rclpy_node,
     )
     pub.with_tf_publisher()
-
     verify_scene(world, scene)
