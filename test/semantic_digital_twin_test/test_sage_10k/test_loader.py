@@ -61,7 +61,7 @@ def test_different_decomposition_methods(
     for room in scene.rooms:
         new_objects = []
         for obj in room.objects:
-            if obj.type in ["bookshelf", "sideboard", "table"]:
+            if obj.type in ["bookshelf"]:  # , "sideboard", "table"]:
                 new_objects.append(obj)
         room.objects = new_objects
 

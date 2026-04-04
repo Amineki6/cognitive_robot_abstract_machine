@@ -4044,8 +4044,8 @@ class BoxDecomposerDAO(
 
     voxel_size: Mapped[builtins.float] = mapped_column(use_existing_column=True)
     fill_thin_holes: Mapped[builtins.bool] = mapped_column(use_existing_column=True)
-    max_board_thickness: Mapped[builtins.int] = mapped_column(use_existing_column=True)
-    min_span_voxel: Mapped[builtins.int] = mapped_column(use_existing_column=True)
+    max_thickness_vox: Mapped[builtins.int] = mapped_column(use_existing_column=True)
+    min_span_vox: Mapped[builtins.int] = mapped_column(use_existing_column=True)
     min_fill_ratio: Mapped[builtins.float] = mapped_column(use_existing_column=True)
     overlap_threshold: Mapped[builtins.float] = mapped_column(use_existing_column=True)
 

@@ -167,12 +167,12 @@ def greedy_merge_boxes(
                     remaining_occupancy, x, y, z, axis=2, x_limit=x1, y_limit=y1
                 )
 
-                remaining_occupancy[x : x1 + 1, y : y1 + 1, z : z1 + 1] = False
+                remaining_occupancy[x:x1, y:y1, z:z1] = False
 
-                index_box = IndexBox(x, x1 + 1, y, y1 + 1, z, z1 + 1)
+                index_box = IndexBox(x, x1, y, y1, z, z1)
                 boxes.append(index_box.to_frozen_box(pitch, origin))
 
-                x = x1 + 1
+                x = x1
 
     return boxes
 
@@ -194,24 +194,24 @@ def _find_extent(
     :param y: The start y-coordinate.
     :param z: The start z-coordinate.
     :param axis: The axis along which to find the extent.
-    :param x_limit: The maximum x-coordinate to consider.
-    :param y_limit: The maximum y-coordinate to consider.
-    :return: The end index along the axis.
+    :param x_limit: The maximum x-coordinate (exclusive) to consider.
+    :param y_limit: The maximum y-coordinate (exclusive) to consider.
+    :return: The end index (exclusive) along the axis.
     """
     nx, ny, nz = occupancy.shape
     if axis == 0:
-        x1 = x
-        while x1 + 1 < nx and occupancy[x1 + 1, y, z]:
+        x1 = x + 1
+        while x1 < nx and occupancy[x1, y, z]:
             x1 += 1
         return x1
     elif axis == 1:
-        y1 = y
-        while y1 + 1 < ny and occupancy[x : x_limit + 1, y1 + 1, z].all():
+        y1 = y + 1
+        while y1 < ny and occupancy[x:x_limit, y1, z].all():
             y1 += 1
         return y1
     else:
-        z1 = z
-        while z1 + 1 < nz and occupancy[x : x_limit + 1, y : y_limit + 1, z1 + 1].all():
+        z1 = z + 1
+        while z1 < nz and occupancy[x:x_limit, y:y_limit, z1].all():
             z1 += 1
         return z1
 
@@ -564,11 +564,11 @@ class BoxDecomposer(MeshDecomposer):
     """
     Whether to fill 1-voxel cracks/voids or not
     """
-    max_board_thickness: int = 2
+    max_thickness_vox: int = 2
     """
     Maximum board thickness in voxels.
     """
-    min_span_voxel: int = 3
+    min_span_vox: int = 3
     """
     Threshold for keeping boards.
     """
@@ -601,8 +601,8 @@ class BoxDecomposer(MeshDecomposer):
 
         board_candidates = detect_planar_boards(
             occupancy=occupancy,
-            max_thickness_voxels=self.max_board_thickness,
-            min_span_voxels=self.min_span_voxel,
+            max_thickness_voxels=self.max_thickness_vox,
+            min_span_voxels=self.min_span_vox,
             min_fill_ratio=self.min_fill_ratio,
         )
         board_index_boxes = deduplicate_index_boxes(
