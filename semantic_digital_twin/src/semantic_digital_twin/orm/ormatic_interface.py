@@ -2316,7 +2316,7 @@ class FieldOfViewDAO(
 class GiangBoxDAO(
     Base,
     DataAccessObject[
-        semantic_digital_twin.pipeline.mesh_decomposition.box_decomposer.GiangBox
+        semantic_digital_twin.pipeline.mesh_decomposition.box_decomposer.FrozenBox
     ],
 ):
 

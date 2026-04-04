@@ -1,15 +1,10 @@
 from __future__ import annotations
 
-import argparse
-import json
-from dataclasses import asdict, dataclass
-from pathlib import Path
+from dataclasses import dataclass
 from typing import List
 
 import numpy as np
-import trimesh
 from scipy import ndimage
-import time
 
 from semantic_digital_twin.pipeline.mesh_decomposition.base import MeshDecomposer
 from semantic_digital_twin.spatial_types import HomogeneousTransformationMatrix
@@ -17,7 +12,7 @@ from semantic_digital_twin.world_description.geometry import Mesh, Box, Scale
 
 
 @dataclass(frozen=True)
-class GiangBox:
+class FrozenBox:
     position: list[float]
     size: list[float]
 
@@ -51,10 +46,10 @@ class IndexBox:
         return int(dy * dz)
 
 
-def index_box_to_box(idx: IndexBox, pitch: float, origin: np.ndarray) -> GiangBox:
+def index_box_to_box(idx: IndexBox, pitch: float, origin: np.ndarray) -> FrozenBox:
     mins = origin + pitch * np.array([idx.x0, idx.y0, idx.z0], dtype=float)
     maxs = origin + pitch * np.array([idx.x1, idx.y1, idx.z1], dtype=float)
-    return GiangBox(
+    return FrozenBox(
         position=((mins + maxs) / 2.0).tolist(),
         size=((maxs - mins) / 2.0).tolist(),
     )
@@ -62,10 +57,10 @@ def index_box_to_box(idx: IndexBox, pitch: float, origin: np.ndarray) -> GiangBo
 
 def greedy_merge_boxes(
     occupancy: np.ndarray, pitch: float, origin: np.ndarray
-) -> list[GiangBox]:
+) -> list[FrozenBox]:
     occ = occupancy.copy()
     nx, ny, nz = occ.shape
-    boxes: list[GiangBox] = []
+    boxes: list[FrozenBox] = []
 
     for z in range(nz):
         for y in range(ny):
@@ -92,7 +87,7 @@ def greedy_merge_boxes(
                 mins = origin + pitch * np.array([x, y, z], dtype=float)
                 maxs = origin + pitch * np.array([x1 + 1, y1 + 1, z1 + 1], dtype=float)
                 boxes.append(
-                    GiangBox(
+                    FrozenBox(
                         position=((mins + maxs) / 2.0).tolist(),
                         size=((maxs - mins) / 2.0).tolist(),
                     )
