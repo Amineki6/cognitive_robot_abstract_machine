@@ -181,9 +181,6 @@ import rclpy
 from semantic_digital_twin.adapters.ros.visualization.viz_marker import  VizMarkerPublisher
 
 arm = Arms.RIGHT
-rclpy.init()
-node = rclpy.create_node("tet")
-VizMarkerPublisher(_world=world, node=node).with_tf_publisher()
 
 with simulated_robot:
     sequential(
