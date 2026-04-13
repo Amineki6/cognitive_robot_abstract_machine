@@ -607,7 +607,14 @@ class GiskardLocation(Location):
                 )
             )
         msc = MotionStatechart()
-        msc.add_nodes([pose_seq, ExternalCollisionAvoidance(robot=robot_view)])
+        msc.add_nodes(
+            [
+                pose_seq,
+                ExternalCollisionAvoidance(
+                    robot=robot_view, cancel_if_collision_violated=False
+                ),
+            ]
+        )
         msc.add_node(EndMotion.when_true(pose_seq))
 
         executor = Executor(
