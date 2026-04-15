@@ -8,36 +8,29 @@ from CGAL.CGAL_AABB_tree import AABB_tree_Triangle_3_soup
 
 @dataclass
 class ScoredGrasp:
-    """Represents a grasp candidate that has been evaluated and scored."""
+    """
+    Represents a grasp candidate that has been evaluated and scored.
+    
+    Attributes:
+        id: A unique identifier for the grasp.
+        pose: A 4x4 transformation matrix representing the grasp pose.
+        score: The calculated quality score for this grasp.
+    """
     id: int
     pose: np.ndarray
     score: float
 
+@dataclass
 class GraspScorer:
     """Evaluates and ranks grasp poses using geometric checks and heuristics."""
-
-    def __init__(
-            self,
-            w_normal: float = 15.0,
-            w_distance: float = 5.0,
-            w_clearance: float = 10.0,
-            penalty_collision: float = -1000.0,
-            penalty_clearance: float = -1000.0,
-            penalty_unstable: float = -500.0,
-            score_partial_contact: float = 5.0,
-            ground_plane_z: float = 0.0
-    ):
-        """
-        Initializes the grasp scorer with weights and penalties.
-        """
-        self.w_normal = w_normal
-        self.w_distance = w_distance
-        self.w_clearance = w_clearance
-        self.penalty_collision = penalty_collision
-        self.penalty_clearance = penalty_clearance
-        self.penalty_unstable = penalty_unstable
-        self.score_partial_contact = score_partial_contact
-        self.ground_plane_z = ground_plane_z
+    w_normal: float = 15.0
+    w_distance: float = 5.0
+    w_clearance: float = 10.0
+    penalty_collision: float = -1000.0
+    penalty_clearance: float = -1000.0
+    penalty_unstable: float = -500.0
+    score_partial_contact: float = 5.0
+    ground_plane_z: float = 0.0
 
     def _trimesh_to_cgal_triangles(self, mesh: trimesh.Trimesh) -> List[Triangle_3]:
         """Converts a Trimesh object into a list of CGAL Triangle_3 objects."""
@@ -60,6 +53,15 @@ class GraspScorer:
         """
         Calculates a quality score for a given grasp pose using geometric heuristics.
         Applies penalties for collisions and clearance, and bonuses for stability.
+        
+        Args:
+            grasp_pose: A 4x4 transformation matrix of the gripper pose.
+            gripper_mesh: The 3D mesh of the gripper.
+            object_mesh: The 3D mesh of the target object.
+            object_tree: A CGAL AABB tree of the object for fast collision checking.
+            
+        Returns:
+            The calculated float score for the grasp.
         """
         total_score = 0.0
         gripper_at_pose = gripper_mesh.copy()
@@ -122,6 +124,14 @@ class GraspScorer:
         """
         Evaluates a list of grasp poses and returns a sorted list of ScoredGrasp objects 
         (best grasps first).
+        
+        Args:
+            grasp_poses: A list of 4x4 transformation matrices representing candidate poses.
+            gripper_mesh: The 3D mesh of the gripper.
+            object_mesh: The 3D mesh of the target object.
+            
+        Returns:
+            A list of ScoredGrasp objects, sorted in descending order by score.
         """
         object_cgal_triangles = self._trimesh_to_cgal_triangles(object_mesh)
         tree_object = AABB_tree_Triangle_3_soup(object_cgal_triangles)
@@ -141,7 +151,18 @@ class GraspScorer:
         return ranked_grasps
 
 def load_successful_grasps_from_dataset(dataset_path: str, gripper_name: str, object_uuid: str) -> List[np.ndarray]:
-    """Helper to read dataset and return list of successful grasp poses."""
+    """
+    Helper to read dataset and return a list of successful grasp poses.
+    
+    Args:
+        dataset_path: The root directory path of the dataset.
+        gripper_name: The name of the gripper used in the dataset.
+        object_uuid: The unique identifier for the target object.
+        
+    Returns:
+        A list of 4x4 transformation matrices representing successful grasp poses.
+        Returns an empty list if no grasps are found or an error occurs.
+    """
     from dataset import GraspWebDatasetReader
     webdataset_reader = GraspWebDatasetReader(os.path.join(dataset_path, gripper_name))
     try:
